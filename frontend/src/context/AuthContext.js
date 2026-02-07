@@ -49,9 +49,21 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    // Remove auth data and redirect to home so any UI using auth state will show logged out immediately
+    try {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+    } catch (e) {
+      // ignore
+    }
     setUser(null);
+    // Force navigate to home. Using window.location ensures redirection works from anywhere
+    // (AuthProvider is mounted outside Router so useNavigate isn't available here).
+    try {
+      window.location.href = '/';
+    } catch (e) {
+      // fallback: do nothing
+    }
   };
 
   const isAdmin = () => {
