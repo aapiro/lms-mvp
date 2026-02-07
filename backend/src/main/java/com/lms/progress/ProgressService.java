@@ -65,4 +65,44 @@ public class ProgressService {
 
         return (int) ((completedCount * 100) / lessons.size());
     }
+
+    @Transactional
+    public int unmarkLessonCompleted(Long lessonId, Long courseId, User user) {
+        if (user == null) {
+            throw new RuntimeException("Authentication required");
+        }
+
+        // Validate course exists
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Course not found"));
+
+        boolean isFree = course.getPrice() != null && course.getPrice().compareTo(java.math.BigDecimal.ZERO) == 0;
+
+        if (!isFree) {
+            boolean hasPurchased = purchaseRepository.existsByUserIdAndCourseIdAndStatus(
+                    user.getId(), courseId, Purchase.PurchaseStatus.COMPLETED);
+            if (!hasPurchased) {
+                throw new RuntimeException("You must purchase this course");
+            }
+        }
+
+        var opt = progressRepository.findByUserIdAndLessonId(user.getId(), lessonId);
+        if (opt.isPresent()) {
+            Progress progress = opt.get();
+            if (Boolean.TRUE.equals(progress.getCompleted())) {
+                progress.setCompleted(false);
+                progress.setCompletedAt(null);
+                progressRepository.save(progress);
+            }
+        }
+
+        // Recalculate progress percentage
+        List<com.lms.lessons.Lesson> lessons = lessonRepository.findByCourseIdOrderByLessonOrderAsc(courseId);
+        if (lessons.isEmpty()) return 0;
+
+        List<Progress> progressList = progressRepository.findByUserIdAndCourseId(user.getId(), courseId);
+        long completedCount = progressList.stream().filter(p -> Boolean.TRUE.equals(p.getCompleted())).count();
+
+        return (int) ((completedCount * 100) / lessons.size());
+    }
 }

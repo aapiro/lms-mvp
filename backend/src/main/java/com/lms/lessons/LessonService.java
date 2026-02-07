@@ -1,18 +1,19 @@
 package com.lms.lessons;
 
+import com.lms.courses.Course;
+import com.lms.courses.CourseRepository;
 import com.lms.payments.Purchase;
 import com.lms.payments.PurchaseRepository;
+import com.lms.progress.ProgressRepository;
 import com.lms.storage.StorageService;
 import com.lms.users.User;
-import com.lms.courses.CourseRepository;
-import com.lms.courses.Course;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
 import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +23,7 @@ public class LessonService {
     private final PurchaseRepository purchaseRepository;
     private final StorageService storageService;
     private final CourseRepository courseRepository;
+    private final ProgressRepository progressRepository;
 
     @Transactional
     public Lesson createLesson(
@@ -100,7 +102,14 @@ public class LessonService {
         response.setLessonType(lesson.getLessonType().name());
         response.setDurationSeconds(lesson.getDurationSeconds());
         response.setFileUrl(presignedUrl);
-        
+        // If user is authenticated, set completed flag from progress table
+        if (user != null) {
+            var opt = progressRepository.findByUserIdAndLessonId(user.getId(), lessonId);
+            response.setCompleted(opt.map(p -> Boolean.TRUE.equals(p.getCompleted())).orElse(false));
+        } else {
+            response.setCompleted(false);
+        }
+
         return response;
     }
     

@@ -26,5 +26,6 @@ public class LessonDto {
         private String lessonType;
         private Integer durationSeconds;
         private String fileUrl; // Presigned URL
+        private Boolean completed = false;
     }
 }

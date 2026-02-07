@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/api';
 import './Lesson.css';
+import ConfirmModal from '../components/ConfirmModal';
 
 function Lesson() {
   const { id } = useParams();
@@ -14,6 +15,7 @@ function Lesson() {
   const playerRef = useRef(null);
   const videoElRef = useRef(null);
   const [videoSrc, setVideoSrc] = useState('');
+  const [showUnmarkConfirm, setShowUnmarkConfirm] = useState(false);
 
   useEffect(() => {
     loadLesson();
@@ -98,7 +100,11 @@ function Lesson() {
 
   const loadLesson = async () => {
     try {
-      const response = await api.get(`/lessons/${id}`);
+      const token = localStorage.getItem('token');
+      console.debug('loadLesson: token present?', !!token);
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const response = await api.get(`/lessons/${id}`, { headers });
+      console.debug('loadLesson: response.data.completed =', response.data?.completed);
       setLesson(response.data);
       // prefer backend streaming endpoint which supports Range and avoids presigned URL issues
       setVideoSrc(`/api/lessons/${id}/stream`);
@@ -113,8 +119,10 @@ function Lesson() {
     try {
       const response = await api.post(`/progress/lessons/${id}/complete?courseId=${lesson.courseId}`);
       const percent = response.data?.progressPercentage;
-      // mark local lesson as completed if applicable
-      setLesson(prev => ({ ...prev, completed: true }));
+      // reload lesson from backend to reflect persisted state
+      await loadLesson();
+
+      // mark local lesson as completed if applicable (loadLesson will set it)
 
       // Dispatch a custom event so other parts of the app could refresh if they listen
       try {
@@ -132,6 +140,28 @@ function Lesson() {
     } catch (err) {
       console.error('Error marking lesson complete:', err);
       alert(err.response?.data?.error || 'Failed to mark lesson completed');
+    }
+  };
+
+  const unmarkCompleted = async () => {
+    try {
+      const response = await api.delete(`/progress/lessons/${id}/complete?courseId=${lesson.courseId}`);
+      const percent = response.data?.progressPercentage;
+      // reload to reflect persisted change
+      await loadLesson();
+
+      try {
+        window.dispatchEvent(new CustomEvent('courseProgressUpdated', { detail: { courseId: lesson.courseId, progressPercentage: percent } }));
+      } catch(e) { /* ignore */ }
+
+      try { await api.get(`/courses/${lesson.courseId}`); } catch(e) {}
+
+      alert('Lesson marked as incomplete. Course progress: ' + (percent != null ? percent + '%' : 'updated'));
+    } catch (err) {
+      console.error('Error unmarking lesson complete:', err);
+      alert(err.response?.data?.error || 'Failed to unmark lesson');
+    } finally {
+      setShowUnmarkConfirm(false);
     }
   };
 
@@ -201,10 +231,26 @@ function Lesson() {
       </div>
 
       <div className="lesson-actions">
-        <button onClick={markCompleted} className="btn-complete" disabled={lesson.completed}>
-          {lesson.completed ? 'Completed' : 'Mark as Completed'}
-        </button>
-      </div>
+        {lesson.completed ? (
+          <>
+            <button onClick={() => setShowUnmarkConfirm(true)} className="btn-complete btn-unmark">
+              Unmark
+            </button>
+            {showUnmarkConfirm && (
+              <ConfirmModal
+                title="Unmark lesson"
+                message="Are you sure you want to mark this lesson as incomplete? This will update your course progress."
+                onConfirm={unmarkCompleted}
+                onCancel={() => setShowUnmarkConfirm(false)}
+              />
+            )}
+          </>
+        ) : (
+          <button onClick={markCompleted} className="btn-complete">
+            Mark as Completed
+          </button>
+        )}
+       </div>
     </div>
   );
 }
