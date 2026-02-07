@@ -30,6 +30,10 @@ function Admin() {
 
   // NEW: state for submenu selection (default to Cursos)
   const [selectedMenu, setSelectedMenu] = useState('cursos');
+  // NEW: state for course detail modal
+  const [showCourseDetail, setShowCourseDetail] = useState(false);
+  const [courseDetail, setCourseDetail] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   useEffect(() => {
     if (!isAdmin()) {
@@ -38,6 +42,29 @@ function Admin() {
     }
     loadCourses();
   }, []);
+
+  const openCourseDetail = async (id) => {
+    // abrir modal inmediatamente y luego cargar el detalle
+    setShowCourseDetail(true);
+    setDetailLoading(true);
+    try {
+      const res = await api.get(`/courses/${id}`);
+      setCourseDetail(res.data);
+    } catch (err) {
+      console.error('Failed to load course detail', err);
+      alert('No se pudo cargar el detalle del curso');
+      // cerrar modal en caso de fallo
+      setShowCourseDetail(false);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  const closeCourseDetail = () => {
+    setShowCourseDetail(false);
+    setCourseDetail(null);
+    setDetailLoading(false);
+  };
 
   const loadCourses = async () => {
     try {
@@ -222,7 +249,10 @@ function Admin() {
                      </div>
                      <div className="course-actions">
                       {/* Nuevo: botón para ver detalle del curso directamente */}
-                      <button onClick={() => navigate(`/course/${course.id}`)} className="btn-detail">
+                      <button
+                        onClick={() => openCourseDetail(course.id)}
+                        className="btn-detail"
+                      >
                         Ver detalle
                       </button>
                        <button
@@ -292,6 +322,68 @@ function Admin() {
        </div>
 
        {/* Lesson modal stays at root so it overlays correctly */}
+       {/* Course detail modal */}
+       {showCourseDetail && (
+         <div className="modal" role="dialog" aria-modal="true">
+           <div className="modal-content course-detail-modal">
+             {detailLoading ? (
+               <div style={{ padding: 40, textAlign: 'center' }}>Cargando...</div>
+             ) : courseDetail ? (
+               <>
+                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                   <h2>{courseDetail.title}</h2>
+                   <button className="btn-cancel" onClick={closeCourseDetail}>Cerrar</button>
+                 </div>
+
+                 <div style={{ marginTop: 12 }}>
+                   {(courseDetail.price === 0 || courseDetail.price === '0') && <span className="badge-free">Free</span>}
+                   <p style={{ marginTop: 10 }}>{courseDetail.description}</p>
+                   <div className="meta" style={{ marginTop: 8 }}>
+                     {(courseDetail.price === 0 || courseDetail.price === '0') ? 'Free' : `$${courseDetail.price}`} • {courseDetail.lessons?.length || 0} lessons
+                   </div>
+                 </div>
+
+                 <div className="lessons-section" style={{ marginTop: 18 }}>
+                   <h3>Contenido</h3>
+                   {courseDetail.lessons && courseDetail.lessons.length > 0 ? (
+                     <div className="lessons-list">
+                       {courseDetail.lessons.map((lesson) => (
+                         <div
+                           key={lesson.id}
+                           className={`lesson-item ${lesson.completed ? 'completed' : ''}`}
+                           onClick={() => {
+                             const isFree = courseDetail.price === 0 || courseDetail.price === '0' || (typeof courseDetail.price === 'object' && courseDetail.price?.value === 0);
+                             if (courseDetail.purchased || isFree) {
+                               closeCourseDetail();
+                               navigate(`/lesson/${lesson.id}`);
+                             } else {
+                               alert('Este curso no ha sido comprado.');
+                             }
+                           }}
+                           style={{ cursor: 'pointer' }}
+                         >
+                           <div className="lesson-info">
+                             <span className="lesson-icon">{lesson.completed ? '✓' : lesson.lessonType === 'VIDEO' ? '▶' : '📄'}</span>
+                             <div>
+                               <h4 style={{ margin: 0 }}>{lesson.title}</h4>
+                               <span className="lesson-meta">{lesson.lessonType}{lesson.durationSeconds ? ` • ${Math.floor(lesson.durationSeconds/60)} min` : ''}</span>
+                             </div>
+                           </div>
+                         </div>
+                       ))}
+                     </div>
+                   ) : (
+                     <p>No hay lecciones todavía.</p>
+                   )}
+                 </div>
+               </>
+             ) : (
+               <div style={{ padding: 40, textAlign: 'center' }}>No se encontró el curso.</div>
+             )}
+           </div>
+         </div>
+       )}
+
        {showLessonForm && selectedCourse && (
          <div className="modal">
            <div className="modal-content">
