@@ -390,3 +390,8 @@
     white-space: nowrap;
   }
 }
+
+.user-detail-modal {
+  max-width: 640px;
+  width: 100%;
+}

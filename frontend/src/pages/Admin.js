@@ -41,6 +41,9 @@ function Admin() {
   const [isEditingUser, setIsEditingUser] = useState(false);
   const [editingUserId, setEditingUserId] = useState(null);
   const [userForm, setUserForm] = useState({ fullName: '', email: '', password: '', role: 'USER' });
+  // NEW: user detail modal state
+  const [showUserDetail, setShowUserDetail] = useState(false);
+  const [userDetail, setUserDetail] = useState(null);
 
   useEffect(() => {
     if (!isAdmin()) {
@@ -208,6 +211,30 @@ function Admin() {
      } catch (err) {
        alert(err.response?.data?.error || 'Failed to create lesson');
      }
+   };
+
+   const openUserDetail = (id) => {
+     const u = users.find((x) => Number(x.id) === Number(id));
+     if (u) {
+       setUserDetail(u);
+       setShowUserDetail(true);
+     } else {
+       // fallback: reload users and open
+       loadUsers().then(() => {
+         const uu = users.find((x) => Number(x.id) === Number(id));
+         if (uu) {
+           setUserDetail(uu);
+           setShowUserDetail(true);
+         } else {
+           alert('Usuario no encontrado');
+         }
+       });
+     }
+   };
+
+   const closeUserDetail = () => {
+     setShowUserDetail(false);
+     setUserDetail(null);
    };
 
    return (
@@ -406,6 +433,12 @@ function Admin() {
                      </div>
                      <div className="user-actions">
                        <button
+                         onClick={() => openUserDetail(user.id)}
+                         className="btn-detail"
+                       >
+                         Ver detalle
+                       </button>
+                       <button
                          onClick={() => handleEditUserClick(user)}
                          className="btn-edit"
                        >
@@ -455,7 +488,6 @@ function Admin() {
          </main>
        </div>
 
-       {/* Lesson modal stays at root so it overlays correctly */}
        {/* Course detail modal */}
        {showCourseDetail && (
          <div className="modal" role="dialog" aria-modal="true">
@@ -566,6 +598,26 @@ function Admin() {
                  </button>
                </div>
              </form>
+           </div>
+         </div>
+       )}
+
+       {/* User detail modal */}
+       {showUserDetail && userDetail && (
+         <div className="modal" role="dialog" aria-modal="true">
+           <div className="modal-content user-detail-modal">
+             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+               <h2>{userDetail.fullName}</h2>
+               <div style={{ display: 'flex', gap: 8 }}>
+                 <button className="btn-edit" onClick={() => { closeUserDetail(); handleEditUserClick(userDetail); }}>Editar</button>
+                 <button className="btn-cancel" onClick={closeUserDetail}>Cerrar</button>
+               </div>
+             </div>
+             <div style={{ marginTop: 12 }}>
+               <p><strong>Email:</strong> {userDetail.email}</p>
+               <p><strong>Rol:</strong> {userDetail.role}</p>
+               {/* If backend adds dates, can show them here */}
+             </div>
            </div>
          </div>
        )}
