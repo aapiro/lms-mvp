@@ -172,6 +172,21 @@
   background: #c0392b;
 }
 
+.btn-edit {
+  padding: 10px 20px;
+  background: #f39c12;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.btn-edit:hover {
+  background: #d48806;
+}
+
 .modal {
   position: fixed;
   top: 0;
