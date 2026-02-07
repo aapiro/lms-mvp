@@ -153,6 +153,21 @@
   gap: 10px;
 }
 
+.btn-detail {
+  padding: 10px 16px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-detail:hover {
+  background: #2563eb;
+}
+
 .btn-add-lesson {
   padding: 10px 20px;
   background: #667eea;

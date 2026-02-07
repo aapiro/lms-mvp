@@ -298,6 +298,65 @@ npm install
 npm start
 ```
 
+### Hot reload / Desarrollo rápido (recomendado)
+A continuación hay opciones para ver cambios inmediatamente (hot-reload) según tu flujo de trabajo.
+
+1) Desarrollo local (recomendado)
+- Ejecuta los servicios de infraestructura y backend con Docker (Postgres, MinIO y Backend) y corre el frontend en tu máquina con hot-reload:
+
+```bash
+# Desde la raíz del proyecto levanta infra + backend
+docker compose up -d postgres minio backend
+
+# En otra terminal, ejecuta el frontend en modo desarrollo (hot-reload)
+cd frontend
+npm install
+npm start
+```
+
+- Abre: http://localhost:3000
+- Ventaja: hot-reload de React; los cambios en `frontend/src/` se reflejan al instante.
+
+2) Desarrollo dentro de Docker (frontend con hot-reload)
+- Si prefieres ejecutar todo dentro de contenedores, crea un archivo `docker-compose.dev.yml` (junto al `docker-compose.yml`) con un override para el servicio `frontend` que monte tu código y ejecute `npm start`:
+
+```yaml
+# docker-compose.dev.yml (ejemplo)
+version: '3.8'
+services:
+  frontend:
+    image: node:18-alpine
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    command: ["/bin/sh","-c","npm install --no-audit --no-fund && npm start"]
+    environment:
+      - REACT_APP_API_URL=http://host.docker.internal:8080/api
+```
+
+- Levanta con:
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+```
+- Nota: en macOS `host.docker.internal` permite que el contenedor frontend acceda al backend que corre en el host o en otro contenedor; ajusta la URL de `REACT_APP_API_URL` según tu red.
+
+3) Desarrollo rápido para solo reconstruir el build estático (cuando usas nginx)
+- Si estás usando la configuración por defecto que construye el frontend y lo sirve con nginx (producción / staging local), necesitas reconstruir la imagen cuando cambias archivos del frontend:
+
+```bash
+# Reconstruir y levantar todo (útil tras cambios en frontend o backend)
+docker compose up -d --build
+```
+
+- Si solo quieres reconstruir el frontend:
+```bash
+docker compose build frontend
+docker compose up -d frontend
+```
+
 ### Ver logs
 ```bash
 docker compose logs -f backend

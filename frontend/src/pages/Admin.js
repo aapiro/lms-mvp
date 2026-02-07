@@ -221,15 +221,17 @@ function Admin() {
                        </span>
                      </div>
                      <div className="course-actions">
+                      {/* Nuevo: botón para ver detalle del curso directamente */}
+                      <button onClick={() => navigate(`/course/${course.id}`)} className="btn-detail">
+                        Ver detalle
+                      </button>
                        <button
                          onClick={() => {
                            setSelectedCourse(course.id);
                            setShowLessonForm(true);
                          }}
                          className="btn-add-lesson"
-                       >
-                         + Add Lesson
-                       </button>
+                       >+ Add Lesson </button>
                        <button
                         onClick={() => handleEditCourseClick(course)}
                         className="btn-edit"
