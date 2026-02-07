@@ -261,3 +261,69 @@
   margin-left: 8px;
   font-size: 0.85rem;
 }
+
+/* NEW styles for sidebar/submenu layout */
+.admin-layout {
+  display: flex;
+  gap: 20px;
+}
+
+.admin-sidebar {
+  width: 220px;
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+  height: fit-content;
+}
+
+.admin-sidebar h3 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  color: #333;
+}
+
+.admin-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-menu-item {
+  background: transparent;
+  border: none;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  color: #444;
+}
+
+.admin-menu-item:hover {
+  background: #f1f5ff;
+}
+
+.admin-menu-item.active {
+  background: #667eea;
+  color: #fff;
+}
+
+.admin-main {
+  flex: 1;
+}
+
+@media (max-width: 800px) {
+  .admin-layout {
+    flex-direction: column;
+  }
+  .admin-sidebar {
+    width: 100%;
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+  }
+  .admin-menu-item {
+    white-space: nowrap;
+  }
+}

@@ -28,6 +28,9 @@ function Admin() {
     file: null
   });
 
+  // NEW: state for submenu selection (default to Cursos)
+  const [selectedMenu, setSelectedMenu] = useState('cursos');
+
   useEffect(() => {
     if (!isAdmin()) {
       navigate('/');
@@ -121,86 +124,172 @@ function Admin() {
          <button onClick={() => navigate('/')} className="btn-back">← Back to Home</button>
        </div>
 
-       <div className="admin-section">
-         <div className="section-header">
-           <h2>Courses</h2>
-           <button onClick={() => { setIsEditing(false); setEditingCourseId(null); setCourseForm({ title: '', description: '', price: '' }); setShowCourseForm(!showCourseForm); }} className="btn-create">
-             {showCourseForm ? 'Cancel' : '+ New Course'}
-           </button>
-         </div>
+       {/* NEW layout: sidebar submenu + main area */}
+       <div className="admin-layout">
+         <aside className="admin-sidebar">
+           <h3>Administración</h3>
+           <nav className="admin-nav">
+             <button
+               className={`admin-menu-item ${selectedMenu === 'cursos' ? 'active' : ''}`}
+               onClick={() => setSelectedMenu('cursos')}
+             >
+               Cursos
+             </button>
 
-         {showCourseForm && (
-           <form onSubmit={handleSaveCourse} className="admin-form">
-             <input
-               type="text"
-               placeholder="Course Title"
-               value={courseForm.title}
-               onChange={(e) => setCourseForm({ ...courseForm, title: e.target.value })}
-               required
-             />
-             <textarea
-               placeholder="Course Description"
-               value={courseForm.description}
-               onChange={(e) => setCourseForm({ ...courseForm, description: e.target.value })}
-               rows="3"
-             />
-             <input
-               type="number"
-               step="0.01"
-               placeholder="Price (USD)"
-               value={courseForm.price}
-               onChange={(e) => setCourseForm({ ...courseForm, price: e.target.value })}
-               required
-             />
-             <div style={{ display: 'flex', gap: 10 }}>
-               <button type="submit" className="btn-submit">{isEditing ? 'Update Course' : 'Create Course'}</button>
-               <button type="button" className="btn-cancel" onClick={() => { setShowCourseForm(false); setIsEditing(false); setEditingCourseId(null); setCourseForm({ title: '', description: '', price: '' }); }}>Cancel</button>
-             </div>
-           </form>
-         )}
+             <button
+               className={`admin-menu-item ${selectedMenu === 'lecciones' ? 'active' : ''}`}
+               onClick={() => setSelectedMenu('lecciones')}
+             >
+               Lecciones
+             </button>
 
-         <div className="courses-list">
-           {courses.map((course) => (
-             <div key={course.id} className="admin-course-card">
-               <div className="course-info">
-                 <div className="course-title-row">
-                   <h3>{course.title}</h3>
-                   {/* Show prominent Free badge when price is zero */}
-                   { (course.price === 0 || course.price === '0') && <span className="badge-free">Free</span> }
-                 </div>
-                 <p>{course.description}</p>
-                 <span className="meta">
-                   { (course.price === 0 || course.price === '0') ? 'Free' : `$${course.price}`} • {course.lessonCount} lessons
-                 </span>
-               </div>
-               <div className="course-actions">
-                 <button
-                   onClick={() => {
-                     setSelectedCourse(course.id);
-                     setShowLessonForm(true);
-                   }}
-                   className="btn-add-lesson"
-                 >
-                   + Add Lesson
-                 </button>
-                 <button
-                  onClick={() => handleEditCourseClick(course)}
-                  className="btn-edit"
-                >
-                  Edit
-                </button>
-                 <button
-                   onClick={() => handleDeleteCourse(course.id)}
-                   className="btn-delete"
-                 >
-                   Delete
+             <button
+               className={`admin-menu-item ${selectedMenu === 'compras' ? 'active' : ''}`}
+               onClick={() => setSelectedMenu('compras')}
+             >
+               Compras
+             </button>
+
+             <button
+               className={`admin-menu-item ${selectedMenu === 'usuarios' ? 'active' : ''}`}
+               onClick={() => setSelectedMenu('usuarios')}
+             >
+               Usuarios
+             </button>
+
+             <button
+               className={`admin-menu-item ${selectedMenu === 'progreso' ? 'active' : ''}`}
+               onClick={() => setSelectedMenu('progreso')}
+             >
+               Progreso
+             </button>
+           </nav>
+         </aside>
+
+         <main className="admin-main">
+           {/* Cursos: reutiliza la sección existente tal cual */}
+           {selectedMenu === 'cursos' && (
+             <div className="admin-section">
+               <div className="section-header">
+                 <h2>Cursos</h2>
+                 <button onClick={() => { setIsEditing(false); setEditingCourseId(null); setCourseForm({ title: '', description: '', price: '' }); setShowCourseForm(!showCourseForm); }} className="btn-create">
+                   {showCourseForm ? 'Cancel' : '+ New Course'}
                  </button>
                </div>
+
+               {showCourseForm && (
+                 <form onSubmit={handleSaveCourse} className="admin-form">
+                   <input
+                     type="text"
+                     placeholder="Course Title"
+                     value={courseForm.title}
+                     onChange={(e) => setCourseForm({ ...courseForm, title: e.target.value })}
+                     required
+                   />
+                   <textarea
+                     placeholder="Course Description"
+                     value={courseForm.description}
+                     onChange={(e) => setCourseForm({ ...courseForm, description: e.target.value })}
+                     rows="3"
+                   />
+                   <input
+                     type="number"
+                     step="0.01"
+                     placeholder="Price (USD)"
+                     value={courseForm.price}
+                     onChange={(e) => setCourseForm({ ...courseForm, price: e.target.value })}
+                     required
+                   />
+                   <div style={{ display: 'flex', gap: 10 }}>
+                     <button type="submit" className="btn-submit">{isEditing ? 'Update Course' : 'Create Course'}</button>
+                     <button type="button" className="btn-cancel" onClick={() => { setShowCourseForm(false); setIsEditing(false); setEditingCourseId(null); setCourseForm({ title: '', description: '', price: '' }); }}>Cancel</button>
+                   </div>
+                 </form>
+               )}
+
+               <div className="courses-list">
+                 {courses.map((course) => (
+                   <div key={course.id} className="admin-course-card">
+                     <div className="course-info">
+                       <div className="course-title-row">
+                         <h3>{course.title}</h3>
+                         { (course.price === 0 || course.price === '0') && <span className="badge-free">Free</span> }
+                       </div>
+                       <p>{course.description}</p>
+                       <span className="meta">
+                         { (course.price === 0 || course.price === '0') ? 'Free' : `$${course.price}`} • {course.lessonCount} lessons
+                       </span>
+                     </div>
+                     <div className="course-actions">
+                       <button
+                         onClick={() => {
+                           setSelectedCourse(course.id);
+                           setShowLessonForm(true);
+                         }}
+                         className="btn-add-lesson"
+                       >
+                         + Add Lesson
+                       </button>
+                       <button
+                        onClick={() => handleEditCourseClick(course)}
+                        className="btn-edit"
+                      >
+                        Edit
+                      </button>
+                       <button
+                         onClick={() => handleDeleteCourse(course.id)}
+                         className="btn-delete"
+                       >
+                         Delete
+                       </button>
+                     </div>
+                   </div>
+                 ))}
+               </div>
              </div>
-           ))}
-         </div>
+           )}
+
+           {/* Placeholders for other admin sections */}
+           {selectedMenu === 'lecciones' && (
+             <div className="admin-section">
+               <div className="section-header">
+                 <h2>Lecciones</h2>
+               </div>
+               <p>Gestión de lecciones (próximamente).</p>
+             </div>
+           )}
+
+           {selectedMenu === 'compras' && (
+             <div className="admin-section">
+               <div className="section-header">
+                 <h2>Compras</h2>
+               </div>
+               <p>Listado de compras y gestión (próximamente).</p>
+             </div>
+           )}
+
+           {selectedMenu === 'usuarios' && (
+             <div className="admin-section">
+               <div className="section-header">
+                 <h2>Usuarios</h2>
+               </div>
+               <p>Gestión de usuarios (próximamente).</p>
+             </div>
+           )}
+
+           {selectedMenu === 'progreso' && (
+             <div className="admin-section">
+               <div className="section-header">
+                 <h2>Progreso</h2>
+               </div>
+               <p>Ver y ajustar el progreso de los usuarios (próximamente).</p>
+             </div>
+           )}
+
+         </main>
        </div>
 
+       {/* Lesson modal stays at root so it overlays correctly */}
        {showLessonForm && selectedCourse && (
          <div className="modal">
            <div className="modal-content">
