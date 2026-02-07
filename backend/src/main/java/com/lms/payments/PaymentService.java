@@ -1,5 +1,6 @@
 package com.lms.payments;
 
+import com.lms.config.AppConfigService;
 import com.lms.courses.Course;
 import com.lms.courses.CourseRepository;
 import com.lms.users.User;
@@ -22,7 +23,8 @@ public class PaymentService {
     
     private final CourseRepository courseRepository;
     private final PurchaseRepository purchaseRepository;
-    
+    private final AppConfigService appConfigService;
+
     @Value("${stripe.secret-key}")
     private String stripeSecretKey;
     
@@ -46,6 +48,20 @@ public class PaymentService {
             throw new RuntimeException("You already own this course");
         }
         
+        // If dev payments mode is enabled, bypass Stripe and create a local purchase and return a fake URL
+        String devPayments = appConfigService.get("dev_payments", "false");
+        if (Boolean.parseBoolean(devPayments)) {
+            Purchase p = new Purchase();
+            p.setUserId(user.getId());
+            p.setCourseId(courseId);
+            p.setAmount(course.getPrice());
+            p.setStatus(Purchase.PurchaseStatus.COMPLETED);
+            purchaseRepository.save(p);
+            log.info("Dev payment: created fake purchase id={} for user={} course={}", p.getId(), user.getId(), courseId);
+            // Return a local URL to indicate success
+            return frontendUrl + "/course/" + courseId + "?payment=dev_success";
+        }
+
         // Crear sesión de Stripe Checkout
         SessionCreateParams params = SessionCreateParams.builder()
                 .setMode(SessionCreateParams.Mode.PAYMENT)
