@@ -39,6 +39,13 @@
 
                // NEW: users management state
                const [users, setUsers] = useState([]);
+               // NEW: purchases state
+               const [purchases, setPurchases] = useState([]);
+               const [purchasePage, setPurchasePage] = useState(0);
+               const [purchaseSize] = useState(20);
+               const [loadingPurchases, setLoadingPurchases] = useState(false);
+               const [showPurchaseDetail, setShowPurchaseDetail] = useState(false);
+               const [purchaseDetail, setPurchaseDetail] = useState(null);
                const [showUserForm, setShowUserForm] = useState(false);
                const [isEditingUser, setIsEditingUser] = useState(false);
                const [editingUserId, setEditingUserId] = useState(null);
@@ -84,6 +91,10 @@
                  if (selectedMenu === 'audit') {
                    loadAuditLogs();
                  }
+                 // NEW: load purchases when compras tab selected
+                 if (selectedMenu === 'compras') {
+                   loadPurchases();
+                 }
                }, [selectedMenu]);
 
                const loadUsers = async () => {
@@ -121,6 +132,34 @@
                    addToast('No se pudieron cargar los audit logs', { type: 'error' });
                  } finally {
                    setLoadingAudit(false);
+                 }
+               };
+
+               const loadPurchases = async (page = 0) => {
+                 setLoadingPurchases(true);
+                 try {
+                   const res = await api.get(`/admin/purchases?page=${page}&size=${purchaseSize}`);
+                   const items = res.data.content || res.data;
+                   setPurchases(items);
+                   setPurchasePage(page);
+                 } catch (err) {
+                   console.error('Error loading purchases', err);
+                 } finally {
+                   setLoadingPurchases(false);
+                 }
+               };
+
+               // Open purchase detail modal
+               const openPurchaseDetail = async (id) => {
+                 setShowPurchaseDetail(true);
+                 setPurchaseDetail(null);
+                 try {
+                   const res = await api.get(`/admin/purchases/${id}`);
+                   setPurchaseDetail(res.data);
+                 } catch (err) {
+                   console.error('Failed to load purchase detail', err);
+                   addToast('No se pudo cargar el detalle de la compra', { type: 'error' });
+                   setShowPurchaseDetail(false);
                  }
                };
 
@@ -576,7 +615,31 @@
                            <div className="section-header">
                              <h2>Compras</h2>
                            </div>
-                           <p>Listado de compras y gestión (próximamente).</p>
+                           {loadingPurchases ? (
+                             <div style={{ padding: 20 }}>Cargando compras...</div>
+                           ) : (
+                             <div className="purchases-list">
+                               {purchases.length === 0 ? (
+                                 <div style={{ padding: 20 }}>No hay compras registradas.</div>
+                               ) : (
+                                 purchases.map((p) => (
+                                   <div key={p.id} className="purchase-item">
+                                     <div style={{ flex: 1 }}>
+                                       <strong>{p.courseTitle || 'Curso #' + p.courseId}</strong>
+                                       <div className="meta">{p.userEmail} • ${p.amount} • {p.status}</div>
+                                     </div>
+                                     <div style={{ display: 'flex', gap: 8 }}>
+                                       <button className="btn-detail" onClick={() => openPurchaseDetail(p.id)}>Ver detalle</button>
+                                     </div>
+                                   </div>
+                                 ))
+                               )}
+                               <div style={{ marginTop: 12 }}>
+                                 <button onClick={() => loadPurchases(Math.max(0, purchasePage - 1))} disabled={purchasePage === 0}>Anterior</button>
+                                 <button onClick={() => loadPurchases(purchasePage + 1)} style={{ marginLeft: 8 }}>Siguiente</button>
+                               </div>
+                             </div>
+                           )}
                          </div>
                        )}
 
@@ -799,6 +862,26 @@
                            <p><strong>Email:</strong> {userDetail.email}</p>
                            <p><strong>Rol:</strong> {userDetail.role}</p>
                            {/* If backend adds dates, can show them here */}
+                         </div>
+                       </div>
+                     </div>
+                   )}
+
+                   {/* Purchase detail modal */}
+                   {showPurchaseDetail && purchaseDetail && (
+                     <div className="modal" role="dialog" aria-modal="true">
+                       <div className="modal-content">
+                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                           <h2>Compra #{purchaseDetail.id}</h2>
+                           <button className="btn-cancel" onClick={() => { setShowPurchaseDetail(false); setPurchaseDetail(null); }}>Cerrar</button>
+                         </div>
+                         <div style={{ marginTop: 12 }}>
+                           <p><strong>Usuario:</strong> {purchaseDetail.userEmail} (id: {purchaseDetail.userId})</p>
+                           <p><strong>Curso:</strong> {purchaseDetail.courseTitle} (id: {purchaseDetail.courseId})</p>
+                           <p><strong>Monto:</strong> ${purchaseDetail.amount}</p>
+                           <p><strong>Estado:</strong> {purchaseDetail.status}</p>
+                           <p><strong>Stripe Payment ID:</strong> {purchaseDetail.stripePaymentId}</p>
+                           <p><strong>Fecha:</strong> {new Date(purchaseDetail.purchasedAt).toLocaleString()}</p>
                          </div>
                        </div>
                      </div>
