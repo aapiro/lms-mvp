@@ -91,13 +91,25 @@ Esto levantará:
 - **Backend API** en `localhost:8080`
 - **Frontend** en `localhost:3000`
 
-### 4. Acceder a la aplicación
+### 4. Acceder a la aplicacin
 
 Abrir navegador en: **http://localhost:3000**
 
 **Credenciales Admin por defecto:**
 - Email: `admin@lms.com`
 - Password: `admin123`
+
+**Usuario de prueba (normal):**
+- Email: `test@example.com`
+- Password: `Password123`
+
+> Nota: he incluido una migracion (`V3__insert_test_user.sql`) que intenta insertar este usuario al arrancar (si no existe). Si por algn motivo la migracion no crea el usuario, puedes crearlo manualmente con la API:
+
+```bash
+curl -s -X POST http://localhost:8080/api/auth/register \
+  -H 'Content-Type: application/json' \
+  -d '{"fullName":"Test User","email":"test@example.com","password":"Password123"}' | jq
+```
 
 ## 📁 Estructura del Proyecto
 
