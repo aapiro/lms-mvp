@@ -328,6 +328,54 @@
   flex: 1;
 }
 
+.users-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.admin-user-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.user-info h3 {
+  margin: 0 0 6px 0;
+  color: #333;
+}
+
+.user-info p {
+  margin: 0;
+  color: #666;
+}
+
+.user-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.role-select {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #fff;
+  font-weight: 600;
+}
+
+/* Ensure admin-user-card behaves on small screens */
+@media (max-width: 600px) {
+  .admin-user-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
 @media (max-width: 800px) {
   .admin-layout {
     flex-direction: column;

@@ -35,6 +35,13 @@ function Admin() {
   const [courseDetail, setCourseDetail] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
+  // NEW: users management state
+  const [users, setUsers] = useState([]);
+  const [showUserForm, setShowUserForm] = useState(false);
+  const [isEditingUser, setIsEditingUser] = useState(false);
+  const [editingUserId, setEditingUserId] = useState(null);
+  const [userForm, setUserForm] = useState({ fullName: '', email: '', password: '', role: 'USER' });
+
   useEffect(() => {
     if (!isAdmin()) {
       navigate('/');
@@ -42,6 +49,65 @@ function Admin() {
     }
     loadCourses();
   }, []);
+
+  // Load users when the Usuarios tab is selected
+  useEffect(() => {
+    if (selectedMenu === 'usuarios') {
+      loadUsers();
+    }
+  }, [selectedMenu]);
+
+  const loadUsers = async () => {
+    try {
+      const res = await api.get('/admin/users');
+      setUsers(res.data);
+    } catch (err) {
+      console.error('Error loading users:', err);
+    }
+  };
+
+  const handleSaveUser = async (e) => {
+    e.preventDefault();
+    try {
+      if (isEditingUser && editingUserId) {
+        // For update, don't require password unless provided
+        const payload = { fullName: userForm.fullName, role: userForm.role };
+        if (userForm.password) payload.password = userForm.password;
+        await api.put(`/admin/users/${editingUserId}`, payload);
+        alert('Usuario actualizado correctamente');
+      } else {
+        await api.post('/admin/users', userForm);
+        alert('Usuario creado correctamente');
+      }
+
+      setUserForm({ fullName: '', email: '', password: '', role: 'USER' });
+      setShowUserForm(false);
+      setIsEditingUser(false);
+      setEditingUserId(null);
+      loadUsers();
+    } catch (err) {
+      alert(err.response?.data?.error || (isEditingUser ? 'Error actualizando usuario' : 'Error creando usuario'));
+    }
+  };
+
+  const handleEditUserClick = (user) => {
+    setIsEditingUser(true);
+    setEditingUserId(user.id);
+    setUserForm({ fullName: user.fullName || '', email: user.email || '', password: '', role: user.role || 'USER' });
+    setShowUserForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleDeleteUser = async (id) => {
+    if (!window.confirm('¿Seguro que quieres eliminar este usuario?')) return;
+    try {
+      await api.delete(`/admin/users/${id}`);
+      alert('Usuario eliminado');
+      loadUsers();
+    } catch (err) {
+      alert('No se pudo eliminar el usuario');
+    }
+  };
 
   const openCourseDetail = async (id) => {
     // abrir modal inmediatamente y luego cargar el detalle
@@ -281,6 +347,83 @@ function Admin() {
              </div>
            )}
 
+           {/* Sección de usuarios: nueva implementación */}
+           {selectedMenu === 'usuarios' && (
+             <div className="admin-section">
+               <div className="section-header">
+                 <h2>Usuarios</h2>
+                 <button onClick={() => { setIsEditingUser(false); setEditingUserId(null); setUserForm({ fullName: '', email: '', password: '', role: 'USER' }); setShowUserForm(!showUserForm); }} className="btn-create">
+                   {showUserForm ? 'Cancel' : '+ New User'}
+                 </button>
+               </div>
+
+               {showUserForm && (
+                 <form onSubmit={handleSaveUser} className="admin-form">
+                   <input
+                     type="text"
+                     placeholder="Full Name"
+                     value={userForm.fullName}
+                     onChange={(e) => setUserForm({ ...userForm, fullName: e.target.value })}
+                     required
+                   />
+                   <input
+                     type="email"
+                     placeholder="Email"
+                     value={userForm.email}
+                     onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
+                     required
+                   />
+                   <input
+                     type="password"
+                     placeholder="Password"
+                     value={userForm.password}
+                     onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
+                     autoComplete="new-password"
+                     // password field should not be autofilled
+                   />
+                   <select
+                     value={userForm.role}
+                     onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}
+                     className="role-select"
+                   >
+                     <option value="USER">User</option>
+                     <option value="ADMIN">Admin</option>
+                   </select>
+                   <div style={{ display: 'flex', gap: 10 }}>
+                     <button type="submit" className="btn-submit">{isEditingUser ? 'Update User' : 'Create User'}</button>
+                     <button type="button" className="btn-cancel" onClick={() => { setShowUserForm(false); setIsEditingUser(false); setEditingUserId(null); setUserForm({ fullName: '', email: '', password: '', role: 'USER' }); }}>Cancel</button>
+                   </div>
+                 </form>
+               )}
+
+               <div className="users-list">
+                 {users.map((user) => (
+                   <div key={user.id} className="admin-user-card">
+                     <div className="user-info">
+                       <h3>{user.fullName}</h3>
+                       <p>{user.email}</p>
+                       <span className="meta">{user.role}</span>
+                     </div>
+                     <div className="user-actions">
+                       <button
+                         onClick={() => handleEditUserClick(user)}
+                         className="btn-edit"
+                       >
+                         Edit
+                       </button>
+                       <button
+                         onClick={() => handleDeleteUser(user.id)}
+                         className="btn-delete"
+                       >
+                         Delete
+                       </button>
+                     </div>
+                   </div>
+                 ))}
+               </div>
+             </div>
+           )}
+
            {/* Placeholders for other admin sections */}
            {selectedMenu === 'lecciones' && (
              <div className="admin-section">
@@ -297,15 +440,6 @@ function Admin() {
                  <h2>Compras</h2>
                </div>
                <p>Listado de compras y gestión (próximamente).</p>
-             </div>
-           )}
-
-           {selectedMenu === 'usuarios' && (
-             <div className="admin-section">
-               <div className="section-header">
-                 <h2>Usuarios</h2>
-               </div>
-               <p>Gestión de usuarios (próximamente).</p>
              </div>
            )}
 
