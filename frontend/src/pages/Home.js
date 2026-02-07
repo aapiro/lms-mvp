@@ -11,6 +11,20 @@ function Home() {
 
   useEffect(() => {
     loadCourses();
+
+    const handler = (e) => {
+      try {
+        const detail = e.detail;
+        if (detail && detail.courseId) {
+          // reload courses to pick updated progress
+          loadCourses();
+        }
+      } catch (err) { /* ignore */ }
+    };
+
+    window.addEventListener('courseProgressUpdated', handler);
+    return () => window.removeEventListener('courseProgressUpdated', handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadCourses = async () => {

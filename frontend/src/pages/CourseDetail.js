@@ -16,6 +16,24 @@ function CourseDetail() {
     loadCourse();
   }, [id]);
 
+  useEffect(() => {
+    // Listen for progress updates (dispatched from Lesson page)
+    const handler = (e) => {
+      try {
+        const detail = e.detail;
+        if (detail && detail.courseId && Number(detail.courseId) === Number(id)) {
+          loadCourse();
+        }
+      } catch (err) {
+        /* ignore */
+      }
+    };
+
+    window.addEventListener('courseProgressUpdated', handler);
+    return () => window.removeEventListener('courseProgressUpdated', handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
   const loadCourse = async () => {
     try {
       const response = await api.get(`/courses/${id}`);

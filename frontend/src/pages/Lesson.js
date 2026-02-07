@@ -111,10 +111,27 @@ function Lesson() {
 
   const markCompleted = async () => {
     try {
-      await api.post(`/progress/lessons/${id}/complete?courseId=${lesson.courseId}`);
-      alert('Lesson marked as completed!');
+      const response = await api.post(`/progress/lessons/${id}/complete?courseId=${lesson.courseId}`);
+      const percent = response.data?.progressPercentage;
+      // mark local lesson as completed if applicable
+      setLesson(prev => ({ ...prev, completed: true }));
+
+      // Dispatch a custom event so other parts of the app could refresh if they listen
+      try {
+        window.dispatchEvent(new CustomEvent('courseProgressUpdated', { detail: { courseId: lesson.courseId, progressPercentage: percent } }));
+      } catch(e) { /* ignore in non-browser env */ }
+
+      // Optionally fetch latest course details to show updated progress somewhere
+      try {
+        await api.get(`/courses/${lesson.courseId}`);
+      } catch(e) {
+        // ignore
+      }
+
+      alert('Lesson marked as completed! Course progress: ' + (percent != null ? percent + '%' : 'updated'));
     } catch (err) {
       console.error('Error marking lesson complete:', err);
+      alert(err.response?.data?.error || 'Failed to mark lesson completed');
     }
   };
 
@@ -184,8 +201,8 @@ function Lesson() {
       </div>
 
       <div className="lesson-actions">
-        <button onClick={markCompleted} className="btn-complete">
-          Mark as Completed
+        <button onClick={markCompleted} className="btn-complete" disabled={lesson.completed}>
+          {lesson.completed ? 'Completed' : 'Mark as Completed'}
         </button>
       </div>
     </div>
