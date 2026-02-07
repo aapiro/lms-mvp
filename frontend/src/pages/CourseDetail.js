@@ -58,46 +58,49 @@ function CourseDetail() {
 
   return (
     <div className="course-detail-container">
-      <button onClick={() => navigate('/')} className="btn-back">← Back to Courses</button>
-      
       <div className="course-header">
         <h1>{course.title}</h1>
-        <p className="course-description">{course.description}</p>
-        
-        <div className="course-actions">
-          {course.purchased ? (
-            <div className="purchased-info">
-              <span className="badge-owned">✓ Owned</span>
-              <div className="progress-section">
-                <div className="progress-bar">
-                  <div 
-                    className="progress-fill" 
-                    style={{ width: `${course.progressPercentage || 0}%` }}
-                  ></div>
-                </div>
-                <span>{course.progressPercentage || 0}% Complete</span>
+        {/* Prominent Free badge */}
+        {(course.price === 0 || course.price === '0') && <span className="badge-free header-badge">Free</span>}
+        <div className="course-meta">
+          <span>{course.description}</span>
+          <div>{course.lessons && course.lessons.length} lessons</div>
+        </div>
+      </div>
+
+      <div className="course-actions">
+        {course.purchased ? (
+          <div className="purchased-info">
+            <span className="badge-owned">✓ Owned</span>
+            <div className="progress-section">
+              <div className="progress-bar">
+                <div
+                  className="progress-fill"
+                  style={{ width: `${course.progressPercentage || 0}%` }}
+                ></div>
               </div>
+              <span>{course.progressPercentage || 0}% Complete</span>
+            </div>
+          </div>
+        ) : (
+          // if price is zero show Free label and no purchase button
+          (course.price === 0 || course.price === '0') ? (
+            <div className="purchase-section">
+              <span className="price">Free</span>
             </div>
           ) : (
-            // if price is zero show Free label and no purchase button
-            (course.price === 0 || course.price === '0') ? (
-              <div className="purchase-section">
-                <span className="price">Free</span>
-              </div>
-            ) : (
-              <div className="purchase-section">
-                <span className="price">${course.price}</span>
-                <button
-                  onClick={handlePurchase}
-                  disabled={purchasing}
-                  className="btn-purchase"
-                >
-                  {purchasing ? 'Processing...' : 'Purchase Course'}
-                </button>
-              </div>
-            )
-          )}
-        </div>
+            <div className="purchase-section">
+              <span className="price">${course.price}</span>
+              <button
+                onClick={handlePurchase}
+                disabled={purchasing}
+                className="btn-purchase"
+              >
+                {purchasing ? 'Processing...' : 'Purchase Course'}
+              </button>
+            </div>
+          )
+        )}
       </div>
 
       <div className="lessons-section">

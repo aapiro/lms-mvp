@@ -26,27 +26,8 @@ function Home() {
 
   return (
     <div className="home-container">
-      <header className="header">
-        <div className="header-content">
-          <h1>LMS Platform</h1>
-          <div className="header-actions">
-            {user ? (
-              <>
-                <span>Welcome, {user.fullName}</span>
-                {isAdmin() && <Link to="/admin" className="btn-admin">Admin Panel</Link>}
-                <button onClick={logout} className="btn-logout">Logout</button>
-              </>
-            ) : (
-              <>
-                <Link to="/login" className="btn-login">Login</Link>
-                <Link to="/register" className="btn-register">Register</Link>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
 
-      <main className="main-content">
+       <main className="main-content">
         <h2>Available Courses</h2>
         
         {loading ? (

@@ -165,6 +165,7 @@ function Admin() {
                <div className="course-info">
                  <div className="course-title-row">
                    <h3>{course.title}</h3>
+                   {/* Show prominent Free badge when price is zero */}
                    { (course.price === 0 || course.price === '0') && <span className="badge-free">Free</span> }
                  </div>
                  <p>{course.description}</p>

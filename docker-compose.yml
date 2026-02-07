@@ -41,6 +41,8 @@ services:
       MINIO_ACCESS_KEY: minioadmin
       MINIO_SECRET_KEY: minioadmin123
       MINIO_BUCKET: lms-content
+      # Public endpoint used to make presigned URLs reachable from host/browser
+      MINIO_PUBLIC_ENDPOINT: http://host.docker.internal:9000
       JWT_SECRET: your-super-secret-jwt-key-change-in-production
       STRIPE_SECRET_KEY: sk_test_your_stripe_secret_key
       STRIPE_WEBHOOK_SECRET: whsec_your_webhook_secret

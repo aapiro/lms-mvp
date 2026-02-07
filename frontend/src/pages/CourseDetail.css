@@ -71,6 +71,20 @@
   vertical-align: middle;
 }
 
+.header-badge {
+  background: #2ecc71;
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-weight: 800;
+  margin-left: 12px;
+  font-size: 0.95rem;
+}
+
+.badge-free.header-badge {
+  box-shadow: 0 2px 6px rgba(46, 204, 113, 0.25);
+}
+
 .progress-section {
   display: flex;
   align-items: center;

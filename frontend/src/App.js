@@ -8,6 +8,7 @@ import CourseDetail from './pages/CourseDetail';
 import Lesson from './pages/Lesson';
 import Admin from './pages/Admin';
 import './App.css';
+import Header from './components/Header';
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
@@ -23,20 +24,15 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <Routes>
+        <Header />
+         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/" element={<Home />} />
           <Route path="/course/:id" element={<CourseDetail />} />
-          <Route 
-            path="/lesson/:id" 
-            element={
-              <PrivateRoute>
-                <Lesson />
-              </PrivateRoute>
-            } 
-          />
-          <Route 
+          {/* Lesson route is public so free courses can be viewed without login; Lesson component still guards paid lessons via backend */}
+          <Route path="/lesson/:id" element={<Lesson />} />
+          <Route
             path="/admin" 
             element={
               <PrivateRoute>

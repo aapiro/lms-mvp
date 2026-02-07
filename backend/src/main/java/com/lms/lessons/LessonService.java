@@ -4,12 +4,15 @@ import com.lms.payments.Purchase;
 import com.lms.payments.PurchaseRepository;
 import com.lms.storage.StorageService;
 import com.lms.users.User;
+import com.lms.courses.CourseRepository;
+import com.lms.courses.Course;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.math.BigDecimal;
 
 @Service
 @RequiredArgsConstructor
@@ -18,7 +21,8 @@ public class LessonService {
     private final LessonRepository lessonRepository;
     private final PurchaseRepository purchaseRepository;
     private final StorageService storageService;
-    
+    private final CourseRepository courseRepository;
+
     @Transactional
     public Lesson createLesson(
             Long courseId,
@@ -65,12 +69,24 @@ public class LessonService {
         Lesson lesson = lessonRepository.findById(lessonId)
                 .orElseThrow(() -> new RuntimeException("Lesson not found"));
         
-        // Verificar que el usuario compró el curso
-        boolean hasPurchased = purchaseRepository.existsByUserIdAndCourseIdAndStatus(
-                user.getId(), lesson.getCourseId(), Purchase.PurchaseStatus.COMPLETED);
-        
-        if (!hasPurchased) {
-            throw new RuntimeException("You must purchase this course to access lessons");
+        // Allow access if course is free (price == 0)
+        Course course = courseRepository.findById(lesson.getCourseId())
+                .orElseThrow(() -> new RuntimeException("Course not found"));
+
+        boolean isFree = course.getPrice() != null && course.getPrice().compareTo(BigDecimal.ZERO) == 0;
+
+        if (!isFree) {
+            // For non-free courses, user must be authenticated and have purchased
+            if (user == null) {
+                throw new RuntimeException("You must purchase this course to access lessons");
+            }
+
+            boolean hasPurchased = purchaseRepository.existsByUserIdAndCourseIdAndStatus(
+                    user.getId(), lesson.getCourseId(), Purchase.PurchaseStatus.COMPLETED);
+
+            if (!hasPurchased) {
+                throw new RuntimeException("You must purchase this course to access lessons");
+            }
         }
         
         // Generar URL firmada (válida por 60 minutos)
@@ -90,5 +106,12 @@ public class LessonService {
     
     public List<Lesson> getLessonsByCourse(Long courseId) {
         return lessonRepository.findByCourseIdOrderByLessonOrderAsc(courseId);
+    }
+
+    // New helper to get raw file_key for streaming
+    public String getFileKey(Long lessonId) {
+        Lesson lesson = lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new RuntimeException("Lesson not found"));
+        return lesson.getFileKey();
     }
 }

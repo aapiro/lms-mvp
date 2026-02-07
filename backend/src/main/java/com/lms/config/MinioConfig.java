@@ -24,11 +24,19 @@ public class MinioConfig {
     @Value("${minio.bucket}")
     private String bucket;
     
+    // Optional public endpoint that browsers can reach (e.g. http://localhost:9000)
+    @Value("${MINIO_PUBLIC_ENDPOINT:}")
+    private String minioPublicEndpoint;
+
     @Bean
     public MinioClient minioClient() {
         try {
+            // If a public endpoint is provided, use it for client creation so
+            // presigned URLs are generated with the same authority the browser will use.
+            String endpointToUse = (minioPublicEndpoint != null && !minioPublicEndpoint.isBlank()) ? minioPublicEndpoint : endpoint;
+
             MinioClient client = MinioClient.builder()
-                    .endpoint(endpoint)
+                    .endpoint(endpointToUse)
                     .credentials(accessKey, secretKey)
                     .build();
             

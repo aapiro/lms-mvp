@@ -325,3 +325,25 @@ MIT License - Usar libremente
 
 **Creado por**: Ingeniero de Software Senior  
 **Stack**: Java 17 + Spring Boot 3 + React 18 + PostgreSQL 15 + MinIO + Stripe
+
+## Capturas headless (Playwright)
+
+He incluido un pequeño script para tomar capturas headless de lecciones utilizando Playwright (Chromium). Esto es útil para pruebas visuales o para generar previews sin abrir un navegador manualmente.
+
+1) Instalar dependencias (desde la raíz del proyecto):
+
+```bash
+cd /Users/usuario/Downloads/lms-mvp
+npm init -y
+npm i -D playwright
+npx playwright install chromium
+```
+
+2) Ejecutar el script (ejemplo para la lección 22):
+
+```bash
+node scripts/playwright-screenshot.js 22 lesson-22
+```
+
+- El script guardará archivos: `lesson-22-full.png` (captura de la página completa) y `lesson-22-player.png` (recorte del reproductor si es posible).
+- Asegúrate de que `docker compose up` esté corriendo antes de ejecutar el script.
