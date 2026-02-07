@@ -53,6 +53,12 @@
                const [devConfig, setDevConfig] = useState({ maintenance: false, devPayments: false });
                const [loadingDevConfig, setLoadingDevConfig] = useState(false);
 
+               // Insert audit logs state and loader near devConfig declarations
+               const [auditLogs, setAuditLogs] = useState([]);
+               const [auditPage, setAuditPage] = useState(0);
+               const [auditSize] = useState(20);
+               const [loadingAudit, setLoadingAudit] = useState(false);
+
                const { addToast } = useToast();
 
                useEffect(() => {
@@ -75,6 +81,9 @@
                  if (selectedMenu === 'desarrollo') {
                    loadDevConfig();
                  }
+                 if (selectedMenu === 'audit') {
+                   loadAuditLogs();
+                 }
                }, [selectedMenu]);
 
                const loadUsers = async () => {
@@ -95,6 +104,23 @@
                    console.error('Error loading dev config', err);
                  } finally {
                    setLoadingDevConfig(false);
+                 }
+               };
+
+               // NEW: load initial audit logs
+               const loadAuditLogs = async (page = 0) => {
+                 setLoadingAudit(true);
+                 try {
+                   const res = await api.get(`/admin/audit?page=${page}&size=${auditSize}`);
+                   // res.data is a page object
+                   const items = res.data.content || res.data;
+                   setAuditLogs(items);
+                   setAuditPage(page);
+                 } catch (err) {
+                   console.error('Error loading audit logs', err);
+                   addToast('No se pudieron cargar los audit logs', { type: 'error' });
+                 } finally {
+                   setLoadingAudit(false);
                  }
                };
 
@@ -350,6 +376,14 @@
                          >
                            Desarrollo
                          </button>
+
+                         {/* Nuevo: Audit Logs como sección separada debajo de Desarrollo */}
+                         <button
+                           className={`admin-menu-item ${selectedMenu === 'audit' ? 'active' : ''}`}
+                           onClick={() => setSelectedMenu('audit')}
+                         >
+                           Audit Logs
+                         </button>
                        </nav>
                      </aside>
 
@@ -577,6 +611,60 @@
                                <p className="meta">Modo desarrollo de compras: si está activado, las compras se simulan localmente sin llamar a Stripe.</p>
                              </div>
                            </div>
+                         </div>
+                       )}
+
+                       {/* Nueva sección independiente para Audit Logs */}
+                       {selectedMenu === 'audit' && (
+                         <div className="admin-section">
+                           <div className="section-header">
+                             <h2>Audit Logs</h2>
+                             <div style={{ display: 'flex', gap: 8 }}>
+                               <button className="btn-create" onClick={() => loadAuditLogs(0)}>Recargar</button>
+                             </div>
+                           </div>
+
+                           {loadingAudit ? (
+                             <div style={{ padding: 20, textAlign: 'center' }}>Cargando audit logs...</div>
+                           ) : (
+                             <>
+                               {auditLogs.length === 0 ? (
+                                 <div style={{ padding: 20, textAlign: 'center' }}>No hay audit logs disponibles.</div>
+                               ) : (
+                                 <div className="audit-logs-list">
+                                   {auditLogs.map((log) => (
+                                     <div key={log.id} className="audit-log-item">
+                                       <div className="log-info">
+                                         <span className="log-date">{new Date(log.createdAt).toLocaleString()}</span>
+                                         <span className="log-action">{log.action}</span>
+                                         <span className="log-actor">{log.actorId ? ` by ${log.actorId}` : ''}</span>
+                                       </div>
+                                       <div className="log-details">
+                                         <pre style={{ whiteSpace: 'pre-wrap' }}>{log.payload}</pre>
+                                       </div>
+                                     </div>
+                                   ))}
+                                 </div>
+                               )}
+
+                               <div className="audit-logs-pagination" style={{ marginTop: 12 }}>
+                                 <button
+                                   onClick={() => loadAuditLogs(Math.max(0, auditPage - 1))}
+                                   disabled={auditPage === 0 || loadingAudit}
+                                   className="btn-paginate"
+                                 >
+                                   Anterior
+                                 </button>
+                                 <button
+                                   onClick={() => loadAuditLogs(auditPage + 1)}
+                                   disabled={loadingAudit}
+                                   className="btn-paginate"
+                                 >
+                                   Siguiente
+                                 </button>
+                               </div>
+                             </>
+                           )}
                          </div>
                        )}
                      </main>
