@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../components/ToastProvider';
 import './Admin.css';
 
 function Admin() {
@@ -44,6 +45,10 @@ function Admin() {
   // NEW: user detail modal state
   const [showUserDetail, setShowUserDetail] = useState(false);
   const [userDetail, setUserDetail] = useState(null);
+  // validation errors for user form
+  const [userErrors, setUserErrors] = useState({ fullName: '', email: '', password: '' });
+
+  const { addToast } = useToast();
 
   useEffect(() => {
     if (!isAdmin()) {
@@ -71,16 +76,43 @@ function Admin() {
 
   const handleSaveUser = async (e) => {
     e.preventDefault();
+    // client-side validations
+    const errors = { fullName: '', email: '', password: '' };
+    if (!userForm.fullName || userForm.fullName.trim().length < 2) {
+      errors.fullName = 'Nombre requerido (min 2 caracteres)';
+    }
+    // simple email regex
+    const emailRe = /^\S+@\S+\.\S+$/;
+    if (!userForm.email || !emailRe.test(userForm.email)) {
+      errors.email = 'Email inválido';
+    }
+    // password rules: on create required min 8, on edit optional but if provided min 8
+    if (!isEditingUser) {
+      if (!userForm.password || userForm.password.length < 8) {
+        errors.password = 'Contraseña requerida (mínimo 8 caracteres)';
+      }
+    } else {
+      if (userForm.password && userForm.password.length > 0 && userForm.password.length < 8) {
+        errors.password = 'Si cambia la contraseña, debe tener al menos 8 caracteres';
+      }
+    }
+
+    setUserErrors(errors);
+    if (errors.fullName || errors.email || errors.password) {
+      addToast('Por favor corrige los campos del formulario', { type: 'error' });
+      return;
+    }
+
     try {
       if (isEditingUser && editingUserId) {
         // For update, don't require password unless provided
-        const payload = { fullName: userForm.fullName, role: userForm.role };
+        const payload = { fullName: userForm.fullName, email: userForm.email, role: userForm.role };
         if (userForm.password) payload.password = userForm.password;
         await api.put(`/admin/users/${editingUserId}`, payload);
-        alert('Usuario actualizado correctamente');
+        addToast('Usuario actualizado correctamente', { type: 'success' });
       } else {
         await api.post('/admin/users', userForm);
-        alert('Usuario creado correctamente');
+        addToast('Usuario creado correctamente', { type: 'success' });
       }
 
       setUserForm({ fullName: '', email: '', password: '', role: 'USER' });
@@ -89,7 +121,8 @@ function Admin() {
       setEditingUserId(null);
       loadUsers();
     } catch (err) {
-      alert(err.response?.data?.error || (isEditingUser ? 'Error actualizando usuario' : 'Error creando usuario'));
+      const msg = err.response?.data?.error || (isEditingUser ? 'Error actualizando usuario' : 'Error creando usuario');
+      addToast(msg, { type: 'error' });
     }
   };
 
@@ -393,6 +426,7 @@ function Admin() {
                      onChange={(e) => setUserForm({ ...userForm, fullName: e.target.value })}
                      required
                    />
+                   {userErrors.fullName && <div className="field-error">{userErrors.fullName}</div>}
                    <input
                      type="email"
                      placeholder="Email"
@@ -400,6 +434,7 @@ function Admin() {
                      onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
                      required
                    />
+                   {userErrors.email && <div className="field-error">{userErrors.email}</div>}
                    <input
                      type="password"
                      placeholder="Password"
@@ -408,6 +443,7 @@ function Admin() {
                      autoComplete="new-password"
                      // password field should not be autofilled
                    />
+                   {userErrors.password && <div className="field-error">{userErrors.password}</div>}
                    <select
                      value={userForm.role}
                      onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}

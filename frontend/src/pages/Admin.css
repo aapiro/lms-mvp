@@ -395,3 +395,10 @@
   max-width: 640px;
   width: 100%;
 }
+
+.field-error {
+  color: #e74c3c;
+  font-size: 0.9rem;
+  margin-top: -8px;
+  margin-bottom: 8px;
+}
