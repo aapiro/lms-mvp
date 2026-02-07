@@ -150,12 +150,13 @@
 .progress-fill {
   background: #667eea;
   height: 100%;
-  transition: width 0.3s;
+  transition: width 600ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .progress-text {
   font-size: 12px;
   color: #666;
+  transition: color 300ms ease;
 }
 
 .btn-view {

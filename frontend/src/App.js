@@ -9,6 +9,7 @@ import Lesson from './pages/Lesson';
 import Admin from './pages/Admin';
 import './App.css';
 import Header from './components/Header';
+import { ToastProvider } from './components/ToastProvider';
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
@@ -23,27 +24,29 @@ function PrivateRoute({ children }) {
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Header />
-         <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/" element={<Home />} />
-          <Route path="/course/:id" element={<CourseDetail />} />
-          {/* Lesson route is public so free courses can be viewed without login; Lesson component still guards paid lessons via backend */}
-          <Route path="/lesson/:id" element={<Lesson />} />
-          <Route
-            path="/admin" 
-            element={
-              <PrivateRoute>
-                <Admin />
-              </PrivateRoute>
-            } 
-          />
-        </Routes>
-      </Router>
+      <ToastProvider>
+        <Router>
+          <Header />
+           <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/" element={<Home />} />
+            <Route path="/course/:id" element={<CourseDetail />} />
+            {/* Lesson route is public so free courses can be viewed without login; Lesson component still guards paid lessons via backend */}
+            <Route path="/lesson/:id" element={<Lesson />} />
+            <Route
+              path="/admin"
+              element={
+                <PrivateRoute>
+                  <Admin />
+                </PrivateRoute>
+              }
+            />
+          </Routes>
+        </Router>
+      </ToastProvider>
     </AuthProvider>
-  );
-}
+   );
+ }
 
-export default App;
+ export default App;

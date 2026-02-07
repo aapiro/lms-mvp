@@ -3,8 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/api';
 import './Lesson.css';
 import ConfirmModal from '../components/ConfirmModal';
+import { useToast } from '../components/ToastProvider';
 
 function Lesson() {
+  const toast = useToast();
   const { id } = useParams();
   const navigate = useNavigate();
   const [lesson, setLesson] = useState(null);
@@ -136,10 +138,10 @@ function Lesson() {
         // ignore
       }
 
-      alert('Lesson marked as completed! Course progress: ' + (percent != null ? percent + '%' : 'updated'));
+      if (toast) toast.addToast('Lesson marked as completed! Course progress: ' + (percent != null ? percent + '%' : 'updated'), { type: 'success' });
     } catch (err) {
       console.error('Error marking lesson complete:', err);
-      alert(err.response?.data?.error || 'Failed to mark lesson completed');
+      if (toast) toast.addToast(err.response?.data?.error || 'Failed to mark lesson completed', { type: 'error' });
     }
   };
 
@@ -156,10 +158,10 @@ function Lesson() {
 
       try { await api.get(`/courses/${lesson.courseId}`); } catch(e) {}
 
-      alert('Lesson marked as incomplete. Course progress: ' + (percent != null ? percent + '%' : 'updated'));
+      if (toast) toast.addToast('Lesson marked as incomplete. Course progress: ' + (percent != null ? percent + '%' : 'updated'), { type: 'success' });
     } catch (err) {
       console.error('Error unmarking lesson complete:', err);
-      alert(err.response?.data?.error || 'Failed to unmark lesson');
+      if (toast) toast.addToast(err.response?.data?.error || 'Failed to unmark lesson', { type: 'error' });
     } finally {
       setShowUnmarkConfirm(false);
     }
