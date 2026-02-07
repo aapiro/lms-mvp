@@ -1,0 +1,82 @@
+.lesson-container {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+.lesson-header {
+  margin-bottom: 30px;
+}
+
+.lesson-header h1 {
+  margin: 20px 0 0 0;
+  color: #333;
+}
+
+.lesson-content {
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.video-container {
+  width: 100%;
+  max-width: 100%;
+}
+
+.video-container video {
+  width: 100%;
+  border-radius: 8px;
+  background: #000;
+}
+
+.pdf-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.pdf-container iframe {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.btn-download {
+  display: inline-block;
+  padding: 12px 24px;
+  background: #667eea;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+  font-weight: 600;
+  text-align: center;
+  transition: background 0.3s;
+}
+
+.btn-download:hover {
+  background: #5568d3;
+}
+
+.lesson-actions {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.btn-complete {
+  padding: 12px 40px;
+  background: #27ae60;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.btn-complete:hover {
+  background: #229954;
+}

@@ -1,0 +1,182 @@
+.course-detail-container {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+.btn-back {
+  padding: 10px 20px;
+  background: #666;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+.btn-back:hover {
+  background: #555;
+}
+
+.course-header {
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 30px;
+}
+
+.course-header h1 {
+  margin: 0 0 15px 0;
+  color: #333;
+}
+
+.course-description {
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.course-actions {
+  border-top: 1px solid #eee;
+  padding-top: 20px;
+}
+
+.purchased-info {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.badge-owned {
+  display: inline-block;
+  padding: 8px 16px;
+  background: #27ae60;
+  color: white;
+  border-radius: 5px;
+  font-weight: 600;
+  width: fit-content;
+}
+
+.progress-section {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.progress-section .progress-bar {
+  flex: 1;
+  background: #eee;
+  border-radius: 10px;
+  height: 12px;
+  overflow: hidden;
+}
+
+.progress-section .progress-fill {
+  background: #667eea;
+  height: 100%;
+  transition: width 0.3s;
+}
+
+.purchase-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.purchase-section .price {
+  font-size: 32px;
+  font-weight: 700;
+  color: #667eea;
+}
+
+.btn-purchase {
+  padding: 15px 40px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.btn-purchase:hover:not(:disabled) {
+  background: #5568d3;
+}
+
+.btn-purchase:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.lessons-section {
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.lessons-section h2 {
+  margin: 0 0 20px 0;
+  color: #333;
+}
+
+.lessons-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.lesson-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  border: 2px solid #eee;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.lesson-item:not(.locked):hover {
+  border-color: #667eea;
+  background: #f8f9ff;
+}
+
+.lesson-item.completed {
+  background: #f0fff4;
+  border-color: #27ae60;
+}
+
+.lesson-item.locked {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.lesson-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.lesson-icon {
+  font-size: 24px;
+}
+
+.lesson-item h3 {
+  margin: 0 0 5px 0;
+  color: #333;
+  font-size: 16px;
+}
+
+.lesson-meta {
+  color: #999;
+  font-size: 14px;
+}
+
+.lock-icon {
+  font-size: 20px;
+}

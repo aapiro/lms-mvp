@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: lms-postgres
+    environment:
+      POSTGRES_DB: lmsdb
+      POSTGRES_USER: lmsuser
+      POSTGRES_PASSWORD: lmspass123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - lms-network
+
+  minio:
+    image: minio/minio:latest
+    container_name: lms-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - lms-network
+
+  backend:
+    build: ./backend
+    container_name: lms-backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/lmsdb
+      SPRING_DATASOURCE_USERNAME: lmsuser
+      SPRING_DATASOURCE_PASSWORD: lmspass123
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin123
+      MINIO_BUCKET: lms-content
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production
+      STRIPE_SECRET_KEY: sk_test_your_stripe_secret_key
+      STRIPE_WEBHOOK_SECRET: whsec_your_webhook_secret
+      FRONTEND_URL: http://localhost:3000
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - minio
+    networks:
+      - lms-network
+
+  frontend:
+    build: ./frontend
+    container_name: lms-frontend
+    environment:
+      REACT_APP_API_URL: http://localhost:8080/api
+      REACT_APP_STRIPE_PUBLIC_KEY: pk_test_your_stripe_public_key
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - lms-network
+
+volumes:
+  postgres_data:
+  minio_data:
+
+networks:
+  lms-network:
+    driver: bridge
