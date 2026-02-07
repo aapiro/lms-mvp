@@ -58,6 +58,7 @@ function CourseDetail() {
 
   return (
     <div className="course-detail-container">
+      <button className="btn-back" onClick={() => navigate('/')}>← Back to Courses</button>
       <div className="course-header">
         <h1>{course.title}</h1>
         {/* Prominent Free badge */}
