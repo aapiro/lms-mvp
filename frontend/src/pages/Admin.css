@@ -122,6 +122,17 @@
   border-color: #667eea;
 }
 
+.admin-course-card .course-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-course-card .course-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .admin-course-card .course-info h3 {
   margin: 0 0 8px 0;
   color: #333;
@@ -239,4 +250,15 @@
 
 .modal-actions .btn-submit {
   flex: 1;
+}
+
+.badge-free {
+  display: inline-block;
+  padding: 6px 12px;
+  background: #16a34a;
+  color: white;
+  border-radius: 9999px;
+  font-weight: 700;
+  margin-left: 8px;
+  font-size: 13px;
 }

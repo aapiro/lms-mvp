@@ -163,10 +163,13 @@ function Admin() {
            {courses.map((course) => (
              <div key={course.id} className="admin-course-card">
                <div className="course-info">
-                 <h3>{course.title}</h3>
+                 <div className="course-title-row">
+                   <h3>{course.title}</h3>
+                   { (course.price === 0 || course.price === '0') && <span className="badge-free">Free</span> }
+                 </div>
                  <p>{course.description}</p>
                  <span className="meta">
-                   ${course.price} • {course.lessonCount} lessons
+                   { (course.price === 0 || course.price === '0') ? 'Free' : `$${course.price}`} • {course.lessonCount} lessons
                  </span>
                </div>
                <div className="course-actions">
