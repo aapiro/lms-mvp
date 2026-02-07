@@ -44,7 +44,9 @@ function CourseDetail() {
   };
 
   const handleLessonClick = (lessonId) => {
-    if (course.purchased) {
+    // Backend marks free courses as purchased; however as a guard, allow access if price is 0
+    const isFree = course.price === 0 || course.price === '0' || (typeof course.price === 'object' && course.price?.value === 0);
+    if (course.purchased || isFree) {
       navigate(`/lesson/${lessonId}`);
     } else {
       alert('You need to purchase this course first');
@@ -77,16 +79,23 @@ function CourseDetail() {
               </div>
             </div>
           ) : (
-            <div className="purchase-section">
-              <span className="price">${course.price}</span>
-              <button 
-                onClick={handlePurchase} 
-                disabled={purchasing}
-                className="btn-purchase"
-              >
-                {purchasing ? 'Processing...' : 'Purchase Course'}
-              </button>
-            </div>
+            // if price is zero show Free label and no purchase button
+            (course.price === 0 || course.price === '0') ? (
+              <div className="purchase-section">
+                <span className="price">Free</span>
+              </div>
+            ) : (
+              <div className="purchase-section">
+                <span className="price">${course.price}</span>
+                <button
+                  onClick={handlePurchase}
+                  disabled={purchasing}
+                  className="btn-purchase"
+                >
+                  {purchasing ? 'Processing...' : 'Purchase Course'}
+                </button>
+              </div>
+            )
           )}
         </div>
       </div>
@@ -114,7 +123,7 @@ function CourseDetail() {
                     </span>
                   </div>
                 </div>
-                {!course.purchased && <span className="lock-icon">🔒</span>}
+                {!(course.purchased || course.price === 0 || course.price === '0') && <span className="lock-icon">🔒</span>}
               </div>
             ))}
           </div>

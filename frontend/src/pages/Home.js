@@ -61,7 +61,7 @@ function Home() {
                   <h3>{course.title}</h3>
                   <p>{course.description}</p>
                   <div className="course-meta">
-                    <span className="price">${course.price}</span>
+                    <span className="price">{course.price === 0 || course.price === '0' ? 'Free' : `$${course.price}`}</span>
                     <span className="lessons">{course.lessonCount} lessons</span>
                   </div>
                   {course.purchased && (

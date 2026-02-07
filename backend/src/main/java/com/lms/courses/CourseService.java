@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.math.BigDecimal;
 
 @Service
 @RequiredArgsConstructor
@@ -72,7 +73,14 @@ public class CourseService {
             List<Lesson> lessons = lessonRepository.findByCourseIdOrderByLessonOrderAsc(course.getId());
             response.setLessonCount(lessons.size());
             
-            if (user != null) {
+            // Mark as purchased if price == 0 (free course)
+            if (course.getPrice() != null && course.getPrice().compareTo(BigDecimal.ZERO) == 0) {
+                response.setPurchased(true);
+                // progress for unauthenticated users not set; only for authenticated we calculate
+                if (user != null) {
+                    response.setProgressPercentage(calculateProgress(user.getId(), course.getId(), lessons));
+                }
+            } else if (user != null) {
                 boolean purchased = purchaseRepository.existsByUserIdAndCourseIdAndStatus(
                         user.getId(), course.getId(), Purchase.PurchaseStatus.COMPLETED);
                 response.setPurchased(purchased);
@@ -101,7 +109,39 @@ public class CourseService {
         response.setCreatedBy(course.getCreatedBy());
         response.setCreatedAt(course.getCreatedAt());
         
-        if (user != null) {
+        // If free course, mark as purchased for everyone and include lessons
+        if (course.getPrice() != null && course.getPrice().compareTo(BigDecimal.ZERO) == 0) {
+            response.setPurchased(true);
+            // If user is authenticated calculate progress and completed flags
+            if (user != null) {
+                response.setProgressPercentage(calculateProgress(user.getId(), courseId, lessons));
+                var progressList = progressRepository.findByUserIdAndCourseId(user.getId(), courseId);
+                var progressMap = progressList.stream()
+                        .collect(Collectors.toMap(p -> p.getLessonId(), p -> p.getCompleted()));
+
+                response.setLessons(lessons.stream().map(lesson -> {
+                    CourseDto.LessonInfo info = new CourseDto.LessonInfo();
+                    info.setId(lesson.getId());
+                    info.setTitle(lesson.getTitle());
+                    info.setLessonType(lesson.getLessonType().name());
+                    info.setDurationSeconds(lesson.getDurationSeconds());
+                    info.setCompleted(progressMap.getOrDefault(lesson.getId(), false));
+                    return info;
+                }).collect(Collectors.toList()));
+            } else {
+                // user not authenticated: still include lessons but mark completed=false
+                response.setLessons(lessons.stream().map(lesson -> {
+                    CourseDto.LessonInfo info = new CourseDto.LessonInfo();
+                    info.setId(lesson.getId());
+                    info.setTitle(lesson.getTitle());
+                    info.setLessonType(lesson.getLessonType().name());
+                    info.setDurationSeconds(lesson.getDurationSeconds());
+                    info.setCompleted(false);
+                    return info;
+                }).collect(Collectors.toList()));
+            }
+
+        } else if (user != null) {
             boolean purchased = purchaseRepository.existsByUserIdAndCourseIdAndStatus(
                     user.getId(), courseId, Purchase.PurchaseStatus.COMPLETED);
             response.setPurchased(purchased);
@@ -124,10 +164,10 @@ public class CourseService {
                 }).collect(Collectors.toList()));
             }
         }
-        
-        return response;
-    }
-    
+
+         return response;
+     }
+
     private Integer calculateProgress(Long userId, Long courseId, List<Lesson> lessons) {
         if (lessons.isEmpty()) return 0;
         
