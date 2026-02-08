@@ -38,10 +38,33 @@ function Home() {
     }
   };
 
+  // Dev helper: quick login as admin when running locally
+  const devLoginAdmin = async () => {
+    try {
+      const res = await api.post('/auth/login', { email: 'admin@lms.com', password: 'admin123' });
+      const { token, ...userData } = res.data;
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(userData));
+      window.location.href = '/admin';
+    } catch (e) {
+      console.error('Dev login failed', e);
+      alert('Dev login failed');
+    }
+  };
+
+  const enableDevLogin = process.env.REACT_APP_ENABLE_DEV_LOGIN === 'true';
+
   return (
     <div className="home-container">
 
-       <main className="main-content">
+      {/* Dev login button, visible only if REACT_APP_ENABLE_DEV_LOGIN=true at build time */}
+      { enableDevLogin && (
+        <div style={{ padding: 12 }}>
+          <button onClick={devLoginAdmin} className="btn-create">Dev: Login as admin</button>
+        </div>
+      )}
+
+      <main className="main-content">
         <h2>Available Courses</h2>
         
         {loading ? (
