@@ -17,6 +17,8 @@
                const [editingCourseId, setEditingCourseId] = useState(null);
                const [selectedCourse, setSelectedCourse] = useState(null);
                const [showLessonForm, setShowLessonForm] = useState(false);
+               const [isEditingLesson, setIsEditingLesson] = useState(false);
+               const [editingLessonId, setEditingLessonId] = useState(null);
 
                const [courseForm, setCourseForm] = useState({
                  title: '',
@@ -317,7 +319,7 @@
                  window.scrollTo({ top: 0, behavior: 'smooth' });
                };
 
-               const handleCreateLesson = async (e) => {
+               const handleSaveLesson = async (e) => {
                  e.preventDefault();
 
                  const formData = new FormData();
@@ -326,20 +328,62 @@
                  if (lessonForm.durationSeconds) {
                    formData.append('durationSeconds', lessonForm.durationSeconds);
                  }
-                 formData.append('file', lessonForm.file);
+                 if (lessonForm.file) {
+                   formData.append('file', lessonForm.file);
+                 }
 
                  try {
-                   await api.post(`/admin/courses/${selectedCourse}/lessons`, formData, {
-                     headers: { 'Content-Type': 'multipart/form-data' }
-                   });
+                   if (isEditingLesson && editingLessonId) {
+                     await api.put(`/admin/lessons/${editingLessonId}`, formData, {
+                       headers: { 'Content-Type': 'multipart/form-data' }
+                     });
+                     alert('Lesson updated successfully!');
+                   } else {
+                     await api.post(`/admin/courses/${selectedCourse}/lessons`, formData, {
+                       headers: { 'Content-Type': 'multipart/form-data' }
+                     });
+                     alert('Lesson created successfully!');
+                   }
 
                    setLessonForm({ title: '', lessonOrder: 1, durationSeconds: '', file: null });
                    setShowLessonForm(false);
                    setSelectedCourse(null);
+                   setIsEditingLesson(false);
+                   setEditingLessonId(null);
                    loadCourses();
-                   alert('Lesson created successfully!');
+                   // Reload course detail if editing
+                   if (courseDetail) {
+                     const res = await api.get(`/courses/${courseDetail.id}`);
+                     setCourseDetail(res.data);
+                   }
                  } catch (err) {
-                   alert(err.response?.data?.error || 'Failed to create lesson');
+                   alert(err.response?.data?.error || (isEditingLesson ? 'Failed to update lesson' : 'Failed to create lesson'));
+                 }
+               };
+
+               const handleEditLessonClick = (lesson) => {
+                 setIsEditingLesson(true);
+                 setEditingLessonId(lesson.id);
+                 setLessonForm({
+                   title: lesson.title || '',
+                   lessonOrder: lesson.lessonOrder || 1,
+                   durationSeconds: lesson.durationSeconds || '',
+                   file: null
+                 });
+                 setShowLessonForm(true);
+                 // No need to set selectedCourse since it's already in courseDetail
+               };
+
+               const handleDeleteLesson = async (lessonId) => {
+                 if (!window.confirm('Are you sure you want to delete this lesson?')) return;
+                 try {
+                   await api.delete(`/admin/lessons/${lessonId}`);
+                   // Reload course detail to reflect changes
+                   const res = await api.get(`/courses/${courseDetail.id}`);
+                   setCourseDetail(res.data);
+                   alert('Lesson deleted successfully!');
+                 } catch (err) {
+                   alert('Failed to delete lesson');
                  }
                };
 
@@ -795,6 +839,26 @@
                                            <span className="lesson-meta">{lesson.lessonType}{lesson.durationSeconds ? ` • ${Math.floor(lesson.durationSeconds/60)} min` : ''}</span>
                                          </div>
                                        </div>
+                                       <div className="lesson-actions">
+                                         <button
+                                           onClick={(e) => {
+                                             e.stopPropagation();
+                                             handleEditLessonClick(lesson);
+                                           }}
+                                           className="btn-edit-lesson"
+                                         >
+                                           Edit
+                                         </button>
+                                         <button
+                                           onClick={(e) => {
+                                             e.stopPropagation();
+                                             handleDeleteLesson(lesson.id);
+                                           }}
+                                           className="btn-delete-lesson"
+                                         >
+                                           Delete
+                                         </button>
+                                       </div>
                                      </div>
                                    ))}
                                  </div>
@@ -810,11 +874,11 @@
                      </div>
                    )}
 
-                   {showLessonForm && selectedCourse && (
+                   {showLessonForm && (selectedCourse || isEditingLesson) && (
                      <div className="modal">
                        <div className="modal-content">
-                         <h2>Add Lesson to Course</h2>
-                         <form onSubmit={handleCreateLesson} className="admin-form">
+                         <h2>{isEditingLesson ? 'Edit Lesson' : 'Add Lesson to Course'}</h2>
+                         <form onSubmit={handleSaveLesson} className="admin-form">
                            <input
                              type="text"
                              placeholder="Lesson Title"
@@ -836,21 +900,24 @@
                              onChange={(e) => setLessonForm({ ...lessonForm, durationSeconds: e.target.value })}
                            />
                            <div className="file-input">
-                             <label>Upload Video or PDF</label>
+                             <label>Upload Video or PDF {isEditingLesson ? '(optional, leave empty to keep current file)' : ''}</label>
                              <input
                                type="file"
                                accept="video/*,application/pdf"
                                onChange={(e) => setLessonForm({ ...lessonForm, file: e.target.files[0] })}
-                               required
+                               required={!isEditingLesson}
                              />
                            </div>
                            <div className="modal-actions">
-                             <button type="submit" className="btn-submit">Create Lesson</button>
+                             <button type="submit" className="btn-submit">{isEditingLesson ? 'Update Lesson' : 'Create Lesson'}</button>
                              <button
                                type="button"
                                onClick={() => {
                                  setShowLessonForm(false);
                                  setSelectedCourse(null);
+                                 setIsEditingLesson(false);
+                                 setEditingLessonId(null);
+                                 setLessonForm({ title: '', lessonOrder: 1, durationSeconds: '', file: null });
                                }}
                                className="btn-cancel"
                              >
