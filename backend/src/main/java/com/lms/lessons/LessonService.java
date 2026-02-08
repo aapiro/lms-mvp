@@ -123,4 +123,53 @@ public class LessonService {
                 .orElseThrow(() -> new RuntimeException("Lesson not found"));
         return lesson.getFileKey();
     }
+
+    @Transactional
+    public Lesson updateLesson(
+            Long lessonId,
+            LessonDto.UpdateLessonRequest request,
+            MultipartFile file
+    ) {
+        Lesson lesson = lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new RuntimeException("Lesson not found"));
+
+        // If a new file is provided, replace the old one
+        if (file != null && !file.isEmpty()) {
+            // Determine type based on new file
+            String contentType = file.getContentType();
+            Lesson.LessonType newType;
+
+            if (contentType != null && contentType.startsWith("video/")) {
+                newType = Lesson.LessonType.VIDEO;
+            } else if (contentType != null && contentType.equals("application/pdf")) {
+                newType = Lesson.LessonType.PDF;
+            } else {
+                throw new RuntimeException("Invalid file type. Only videos and PDFs are supported.");
+            }
+
+            // Upload new file
+            String folder = newType == Lesson.LessonType.VIDEO ? "videos" : "pdfs";
+            String newFileKey = storageService.uploadFile(file, folder);
+
+            // Delete old file
+            storageService.deleteFile(lesson.getFileKey());
+
+            // Update lesson with new file details
+            lesson.setFileKey(newFileKey);
+            lesson.setLessonType(newType);
+        }
+
+        // Update other fields if provided
+        if (request.getTitle() != null) {
+            lesson.setTitle(request.getTitle());
+        }
+        if (request.getLessonOrder() != null) {
+            lesson.setLessonOrder(request.getLessonOrder());
+        }
+        if (request.getDurationSeconds() != null) {
+            lesson.setDurationSeconds(request.getDurationSeconds());
+        }
+
+        return lessonRepository.save(lesson);
+    }
 }

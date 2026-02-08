@@ -28,4 +28,13 @@ public class LessonDto {
         private String fileUrl; // Presigned URL
         private Boolean completed = false;
     }
+
+    @Data
+    public static class UpdateLessonRequest {
+        private String title;
+
+        private Integer lessonOrder;
+
+        private Integer durationSeconds;
+    }
 }

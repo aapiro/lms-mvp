@@ -93,4 +93,27 @@ public class AdminController {
         }
         return ResponseEntity.noContent().build();
     }
+
+    @PutMapping("/lessons/{id}")
+    public ResponseEntity<?> updateLesson(
+            @PathVariable Long id,
+            @RequestParam(value = "title", required = false) String title,
+            @RequestParam(value = "lessonOrder", required = false) Integer lessonOrder,
+            @RequestParam(value = "durationSeconds", required = false) Integer durationSeconds,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @AuthenticationPrincipal User user
+    ) {
+        LessonDto.UpdateLessonRequest request = new LessonDto.UpdateLessonRequest();
+        request.setTitle(title);
+        request.setLessonOrder(lessonOrder);
+        request.setDurationSeconds(durationSeconds);
+
+        Object lesson = lessonService.updateLesson(id, request, file);
+        try {
+            auditService.log(user != null ? user.getId() : null, "UPDATE_LESSON", "lesson", String.valueOf(((com.lms.lessons.Lesson)lesson).getId()), "{\"title\":\"" + (title != null ? title : "unchanged") + "\"}");
+        } catch (Exception e) {
+            // ignore
+        }
+        return ResponseEntity.ok(lesson);
+    }
 }
