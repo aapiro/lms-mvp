@@ -28,14 +28,14 @@ WHERE u.email = 'instructor@lms.local'
   AND NOT EXISTS (SELECT 1 FROM courses WHERE id = 2001 OR title = 'Curso DEMO 2');
 
 -- Lessons for course 2000
--- The lessons table uses columns: lesson_order, lesson_type, file_key, duration_seconds
-INSERT INTO lessons (id, course_id, lesson_order, lesson_type, file_key, duration_seconds, created_at, updated_at)
-SELECT 3000, c.id, 1, 'VIDEO', 'demo/video1.mp4', 300, NOW(), NOW()
+-- The lessons table requires title and uses columns: lesson_order, lesson_type, file_key, duration_seconds
+INSERT INTO lessons (id, course_id, title, lesson_order, lesson_type, file_key, duration_seconds, created_at, updated_at)
+SELECT 3000, c.id, 'Lección 1 - Introducción', 1, 'VIDEO', 'demo/video1.mp4', 300, NOW(), NOW()
 FROM courses c
 WHERE c.id = 2000 AND NOT EXISTS (SELECT 1 FROM lessons WHERE id = 3000);
 
-INSERT INTO lessons (id, course_id, lesson_order, lesson_type, file_key, duration_seconds, created_at, updated_at)
-SELECT 3001, c.id, 2, 'PDF', 'demo/notes1.pdf', NULL, NOW(), NOW()
+INSERT INTO lessons (id, course_id, title, lesson_order, lesson_type, file_key, duration_seconds, created_at, updated_at)
+SELECT 3001, c.id, 'Lección 2 - PDF', 2, 'PDF', 'demo/notes1.pdf', NULL, NOW(), NOW()
 FROM courses c
 WHERE c.id = 2000 AND NOT EXISTS (SELECT 1 FROM lessons WHERE id = 3001);
 
