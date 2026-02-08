@@ -1,17 +1,17 @@
 -- V11: Seed full demo data for development (idempotent)
 -- Inserts users, courses, lessons, purchases, progress, assessments, questions, submissions, grades for testing the whole app.
 
--- Users
-INSERT INTO users (id, email, name, password, role, created_at, updated_at)
-SELECT 1000, 'alice@lms.local', 'Alice', '<no-password-hash>', 'STUDENT', NOW(), NOW()
+-- Users (use existing safe columns)
+INSERT INTO users (id, email, password, role, created_at, updated_at)
+SELECT 1000, 'alice@lms.local', '<no-password-hash>', 'STUDENT', NOW(), NOW()
 WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'alice@lms.local');
 
-INSERT INTO users (id, email, name, password, role, created_at, updated_at)
-SELECT 1001, 'bob@lms.local', 'Bob', '<no-password-hash>', 'STUDENT', NOW(), NOW()
+INSERT INTO users (id, email, password, role, created_at, updated_at)
+SELECT 1001, 'bob@lms.local', '<no-password-hash>', 'STUDENT', NOW(), NOW()
 WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'bob@lms.local');
 
-INSERT INTO users (id, email, name, password, role, created_at, updated_at)
-SELECT 1002, 'instructor@lms.local', 'Instructor', '<no-password-hash>', 'INSTRUCTOR', NOW(), NOW()
+INSERT INTO users (id, email, password, role, created_at, updated_at)
+SELECT 1002, 'instructor@lms.local', '<no-password-hash>', 'INSTRUCTOR', NOW(), NOW()
 WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'instructor@lms.local');
 
 -- Courses
