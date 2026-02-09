@@ -56,7 +56,10 @@ services:
       - lms-network
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        REACT_APP_ENABLE_DEV_LOGIN: ${REACT_APP_ENABLE_DEV_LOGIN:-false}
     container_name: lms-frontend
     environment:
       REACT_APP_API_URL: http://localhost:8080/api
