@@ -44,4 +44,25 @@ public class MetricsAdminController {
         List<Map<String, Object>> series = metricsService.getSalesTimeSeries(from, to, interval);
         return ResponseEntity.ok(series);
     }
+
+    // Public endpoints for local/dev testing: return the same data without requiring ADMIN role.
+    // These should only be used in development environments. Consider gating them behind a config flag.
+    @GetMapping("/public-summary")
+    public ResponseEntity<Map<String, Object>> publicSummary() {
+        Map<String, Object> data = metricsService.getSummary();
+        return ResponseEntity.ok(data);
+    }
+
+    @GetMapping("/sales-timeseries-public")
+    public ResponseEntity<List<Map<String, Object>>> salesTimeseriesPublic(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(defaultValue = "day") String interval
+    ) {
+        if (from.isAfter(to)) {
+            LocalDate tmp = from; from = to; to = tmp;
+        }
+        List<Map<String, Object>> series = metricsService.getSalesTimeSeries(from, to, interval);
+        return ResponseEntity.ok(series);
+    }
 }

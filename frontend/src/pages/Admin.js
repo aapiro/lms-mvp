@@ -573,6 +573,13 @@
                          </div>
                        )}
 
+                       {/* Dashboard: renderiza el componente de métricas */}
+                       {selectedMenu === 'dashboard' && (
+                         <div className="admin-section">
+                           <AdminDashboard />
+                         </div>
+                       )}
+
                        {/* Sección de usuarios: nueva implementación */}
                        {selectedMenu === 'usuarios' && (
                          <div className="admin-section">

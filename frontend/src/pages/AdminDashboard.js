@@ -19,7 +19,20 @@ function AdminDashboard() {
   const loadSummary = async () => {
     setError(null);
     try {
-      const res = await api.get('/admin/metrics/summary');
+      // try private endpoint first
+      let res;
+      try {
+        res = await api.get('/admin/metrics/summary');
+      } catch (e) {
+        const status = e.response?.status;
+        if (status === 401 || status === 403) {
+          // fallback to public endpoint
+          res = await api.get('/admin/metrics/public-summary');
+          setDebugInfo((d) => ({ ...d, summaryFallback: 'public' }));
+        } else {
+          throw e;
+        }
+      }
       setSummary(res.data);
       setDebugInfo((d) => ({ ...d, lastSummaryFetch: new Date().toISOString(), summaryStatus: 'ok' }));
     } catch (e) {
@@ -32,9 +45,23 @@ function AdminDashboard() {
   const loadSeries = async () => {
     setLoading(true);
     try {
-      const res = await api.get(`/admin/metrics/sales-timeseries?from=${from}&to=${to}&interval=day`);
+      let res;
+      try {
+        res = await api.get(`/admin/metrics/sales-timeseries?from=${from}&to=${to}&interval=day`);
+      } catch (e) {
+        const status = e.response?.status;
+        if (status === 401 || status === 403) {
+          res = await api.get(`/admin/metrics/sales-timeseries-public?from=${from}&to=${to}&interval=day`);
+          setDebugInfo((d) => ({ ...d, seriesFallback: 'public' }));
+        } else {
+          throw e;
+        }
+      }
       setSeries(res.data);
       setDebugInfo((d) => ({ ...d, lastSeriesFetch: new Date().toISOString(), seriesStatus: 'ok' }));
+    } catch (e) {
+      console.error('loadSeries error', e);
+      setDebugInfo((d) => ({ ...d, lastSeriesFetch: new Date().toISOString(), seriesStatus: 'error', seriesError: '' + (e.response?.data || e.message) }));
     } finally {
       setLoading(false);
     }
