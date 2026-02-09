@@ -5,6 +5,7 @@
              import { useAuth } from '../context/AuthContext';
              import { useToast } from '../components/ToastProvider';
              import './Admin.css';
+             import AdminDashboard from './AdminDashboard';
 
              function Admin() {
                const { isAdmin } = useAuth();
@@ -33,7 +34,7 @@
                });
 
                // NEW: state for submenu selection (default to Cursos)
-               const [selectedMenu, setSelectedMenu] = useState('cursos');
+               const [selectedMenu, setSelectedMenu] = useState('dashboard');
                // NEW: state for course detail modal
                const [showCourseDetail, setShowCourseDetail] = useState(false);
                const [courseDetail, setCourseDetail] = useState(null);
@@ -70,12 +71,19 @@
 
                const { addToast } = useToast();
 
+               const [hasAdminAccess, setHasAdminAccess] = useState(null);
+
                useEffect(() => {
-                 if (!isAdmin()) {
-                   navigate('/');
-                   return;
-                 }
-                 loadCourses();
+                 const check = async () => {
+                   // check auth locally
+                   if (!isAdmin()) {
+                     setHasAdminAccess(false);
+                   } else {
+                     setHasAdminAccess(true);
+                     loadCourses();
+                   }
+                 };
+                 check();
                }, []);
 
                // Load users when the Usuarios tab is selected
@@ -433,6 +441,13 @@
                          </button>
 
                          <button
+                           className={`admin-menu-item ${selectedMenu === 'dashboard' ? 'active' : ''}`}
+                           onClick={() => setSelectedMenu('dashboard')}
+                         >
+                           Dashboard
+                         </button>
+
+                         <button
                            className={`admin-menu-item ${selectedMenu === 'lecciones' ? 'active' : ''}`}
                            onClick={() => setSelectedMenu('lecciones')}
                          >
@@ -555,6 +570,13 @@
                                </div>
                              ))}
                            </div>
+                         </div>
+                       )}
+
+                       {/* Dashboard: renderiza el componente de métricas */}
+                       {selectedMenu === 'dashboard' && (
+                         <div className="admin-section">
+                           <AdminDashboard />
                          </div>
                        )}
 
