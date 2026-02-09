@@ -440,6 +440,13 @@
                          </button>
 
                          <button
+                           className={`admin-menu-item ${selectedMenu === 'evaluaciones' ? 'active' : ''}`}
+                           onClick={() => setSelectedMenu('evaluaciones')}
+                         >
+                           Evaluaciones
+                         </button>
+
+                         <button
                            className={`admin-menu-item ${selectedMenu === 'compras' ? 'active' : ''}`}
                            onClick={() => setSelectedMenu('compras')}
                          >
@@ -651,6 +658,15 @@
                              <h2>Lecciones</h2>
                            </div>
                            <p>Gestión de lecciones (próximamente).</p>
+                         </div>
+                       )}
+
+                       {selectedMenu === 'evaluaciones' && (
+                         <div className="admin-section">
+                           <div className="section-header">
+                             <h2>Evaluaciones</h2>
+                           </div>
+                           <p>Gestión de evaluaciones (próximamente).</p>
                          </div>
                        )}
 
