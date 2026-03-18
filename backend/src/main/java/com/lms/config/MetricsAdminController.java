@@ -31,6 +31,13 @@ public class MetricsAdminController {
         return ResponseEntity.ok(data);
     }
 
+    // Public summary endpoint for non-admin users / frontend fallback
+    @GetMapping("/public-summary")
+    public ResponseEntity<Map<String, Object>> publicSummary() {
+        Map<String, Object> data = metricsService.getSummary();
+        return ResponseEntity.ok(data);
+    }
+
     @GetMapping("/sales-timeseries")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<Map<String, Object>>> salesTimeseries(

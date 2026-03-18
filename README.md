@@ -1,6 +1,10 @@
 # LMS Platform - Learning Management System MVP
 
-Sistema completo de gestión de aprendizaje (LMS) estilo Netflix para cursos online con compras integradas vía Stripe.
+![LMS Overview](./img.png)
+
+Sistema completo de gestión de aprendizaje (LMS) estilo Pluralsight para cursos online con compras integradas vía Stripe.
+
+![LMS Demo 2](./img_1.png)
 
 ## 🏗️ Arquitectura
 
@@ -85,6 +89,12 @@ REACT_APP_STRIPE_PUBLIC_KEY=pk_test_tu_clave_publica
 docker compose up --build
 ```
 
+Puedes usar este otro comando cuando quieras reiniciar todo y limpiar volúmenes (inicio totalmente limpio):
+
+```bash
+docker-compose down -v && docker-compose up --build -d
+```
+
 Esto levantará:
 - **PostgreSQL** en `localhost:5432`
 - **MinIO** en `localhost:9000` (consola en `localhost:9001`)
@@ -95,15 +105,48 @@ Esto levantará:
 
 Abrir navegador en: **http://localhost:3000**
 
-**Credenciales Admin por defecto:**
-- Email: `admin@lms.com`
-- Password: `admin123`
+**Credenciales seeded (migraciones)**:
 
-**Usuario de prueba (normal):**
-- Email: `test@example.com`
-- Password: `Password123`
+- Admin (V2):
+  - Email: `admin@lms.com`
+  - Password: `admin123` (hash incluido en la migraci?n V2)
+  - Role: ADMIN
 
-> Nota: he incluido una migracion (`V3__insert_test_user.sql`) que intenta insertar este usuario al arrancar (si no existe). Si por algn motivo la migracion no crea el usuario, puedes crearlo manualmente con la API:
+- Test user (V3):
+  - Email: `test@example.com`
+  - Password: `Password123` (hash incluido en la migraci?n V3)
+  - Role: USER
+
+- Dev user (V10):
+  - Email: `dev@lms.local`
+  - Role: ADMIN
+  - Nota: la migraci?n crea este usuario pero NO establece un hash de contraseña (`<no-password-hash>`). Si quieres iniciar sesi?n con `dev@lms.local`, asigna una contraseña manualmente (ejemplo usando el mismo hash de `admin123`):
+
+```bash
+# Reemplaza el hash por el que prefieras; este es el hash usado en V2 para 'admin123'
+docker-compose exec -T postgres psql -U lmsuser -d lmsdb -c "UPDATE users SET password = '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy' WHERE email = 'dev@lms.local';"
+```
+
+- Demo users (V11):
+  - `alice@lms.local` (STUDENT) — no password set in seed (`<no-password-hash>`)
+  - `bob@lms.local` (STUDENT) — no password set in seed
+  - `instructor@lms.local` (INSTRUCTOR) — no password set in seed
+
+- QA user (V12):
+  - `qa@lms.local` (STUDENT) — no password set in seed
+
+> Nota: Para usuarios que no tengan contrase?a en las migraciones puedes:
+> - asignar un hash de BCrypt manualmente en la BD (ejemplo arriba), o
+> - eliminar el usuario y registrarlo de nuevo via API (`/api/auth/register`) para crear una cuenta con contrase?a conocida.
+
+> Si necesitas convertir un usuario a ADMIN puedes ejecutar (ejemplo):
+
+```bash
+# Promover un usuario a ADMIN (usar con precauci?n)
+docker-compose exec -T postgres psql -U lmsuser -d lmsdb -c "UPDATE users SET role='ADMIN' WHERE email='test@example.com';"
+```
+
+> Si por alg?n motivo la migraci?n no crea `test@example.com`, puedes registrarlo manualmente con:
 
 ```bash
 curl -s -X POST http://localhost:8080/api/auth/register \

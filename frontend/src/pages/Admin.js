@@ -666,6 +666,13 @@
                          </div>
                        )}
 
+                       {/* Dashboard */}
+                       {selectedMenu === 'dashboard' && (
+                         <div className="admin-section">
+                           <AdminDashboard />
+                         </div>
+                       )}
+
                        {/* Placeholders for other admin sections */}
                        {selectedMenu === 'lecciones' && (
                          <div className="admin-section">

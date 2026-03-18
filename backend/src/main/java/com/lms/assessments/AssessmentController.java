@@ -2,6 +2,9 @@ package com.lms.assessments;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import com.lms.users.User;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -48,20 +51,32 @@ public class AssessmentController {
     }
 
     @PostMapping("/{assessmentId}/submissions/start")
-    public ResponseEntity<Submission> startSubmission(
+    public ResponseEntity<AssessmentDto.SubmissionResponse> startSubmission(
             @PathVariable Long assessmentId,
-            @RequestParam Long userId) {
-        Submission submission = assessmentService.startOrGetSubmission(assessmentId, userId);
-        return ResponseEntity.ok(submission);
+            @AuthenticationPrincipal User user,
+            @RequestParam(value = "userId", required = false) Long userId) {
+        Long effectiveUserId = (user != null && user.getId() != null) ? user.getId() : userId;
+        if (effectiveUserId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        Submission submission = assessmentService.startOrGetSubmission(assessmentId, effectiveUserId);
+        AssessmentDto.SubmissionResponse response = assessmentService.getSubmissionWithGrades(submission.getId());
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{assessmentId}/submissions/submit")
-    public ResponseEntity<Submission> submitAssessment(
+    public ResponseEntity<AssessmentDto.SubmissionResponse> submitAssessment(
             @PathVariable Long assessmentId,
-            @RequestParam Long userId,
+            @AuthenticationPrincipal User user,
+            @RequestParam(value = "userId", required = false) Long userId,
             @RequestBody AssessmentDto.SubmitAssessmentRequest request) {
-        Submission submission = assessmentService.submitAssessment(assessmentId, userId, request);
-        return ResponseEntity.ok(submission);
+        Long effectiveUserId = (user != null && user.getId() != null) ? user.getId() : userId;
+        if (effectiveUserId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        Submission submission = assessmentService.submitAssessment(assessmentId, effectiveUserId, request);
+        AssessmentDto.SubmissionResponse response = assessmentService.getSubmissionWithGrades(submission.getId());
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/submissions/{submissionId}")

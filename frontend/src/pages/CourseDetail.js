@@ -178,10 +178,10 @@ function CourseDetail() {
           </div>
         )}
 
-        {activeTab === 'assessments' && course.assessments && (
+        {activeTab === 'assessments' && (
           <div className="assessments-section">
             <h2>Assessments</h2>
-            <Assessments assessments={course.assessments} courseId={course.id} />
+            <Assessments courseId={course.id} />
           </div>
         )}
       </div>

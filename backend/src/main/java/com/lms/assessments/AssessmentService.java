@@ -3,6 +3,8 @@ package com.lms.assessments;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -15,6 +17,8 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class AssessmentService {
+
+    private static final Logger log = LoggerFactory.getLogger(AssessmentService.class);
 
     private final AssessmentRepository assessmentRepository;
     private final QuestionRepository questionRepository;
@@ -111,18 +115,22 @@ public class AssessmentService {
 
     @Transactional
     public Submission startOrGetSubmission(Long assessmentId, Long userId) {
+        log.info("startOrGetSubmission called: assessmentId={}, userId={}", assessmentId, userId);
         return submissionRepository.findByAssessmentIdAndUserId(assessmentId, userId)
                 .orElseGet(() -> {
                     Submission submission = new Submission();
                     submission.setAssessmentId(assessmentId);
                     submission.setUserId(userId);
                     submission.setStatus(Submission.SubmissionStatus.IN_PROGRESS);
-                    return submissionRepository.save(submission);
+                    Submission saved = submissionRepository.save(submission);
+                    log.info("Created submission id={} for assessmentId={} userId={}", saved.getId(), assessmentId, userId);
+                    return saved;
                 });
     }
 
     @Transactional
     public Submission submitAssessment(Long assessmentId, Long userId, AssessmentDto.SubmitAssessmentRequest request) {
+        log.info("submitAssessment called: assessmentId={}, userId={}, answersCount={}", assessmentId, userId, request != null && request.getAnswers() != null ? request.getAnswers().size() : 0);
         Submission submission = submissionRepository.findByAssessmentIdAndUserId(assessmentId, userId)
                 .orElseThrow(() -> new RuntimeException("Submission not found"));
 
@@ -144,7 +152,9 @@ public class AssessmentService {
         // Auto-grade multiple choice questions
         autoGradeSubmission(submission);
 
-        return submissionRepository.save(submission);
+        Submission saved = submissionRepository.save(submission);
+        log.info("Submission submitted id={} score={}", saved.getId(), saved.getScore());
+        return saved;
     }
 
     private void autoGradeSubmission(Submission submission) {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api/api';
 import './Assessments.css';
+import { useAuth } from '../context/AuthContext';
 
 const Assessments = ({ courseId, assessments: initialAssessments }) => {
   const [assessments, setAssessments] = useState(initialAssessments || []);
@@ -8,6 +9,7 @@ const Assessments = ({ courseId, assessments: initialAssessments }) => {
   const [error, setError] = useState(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [selectedAssessment, setSelectedAssessment] = useState(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     if (!initialAssessments) {
@@ -276,17 +278,38 @@ const TakeAssessmentModal = ({ assessment, onClose, onComplete }) => {
   const [answers, setAnswers] = useState({});
   const [submissionId, setSubmissionId] = useState(null);
   const [submitted, setSubmitted] = useState(false);
+  const [startLoading, setStartLoading] = useState(true);
+  const [assessmentData, setAssessmentData] = useState(assessment);
+  const { user } = useAuth();
 
   useEffect(() => {
-    startAssessment();
+    const boot = async () => {
+      // if the passed assessment doesn't include questions, fetch full detail
+      if (!assessment.questions || assessment.questions.length === 0) {
+        try {
+          const res = await api.get(`/assessments/${assessment.id}`);
+          setAssessmentData(res.data);
+        } catch (e) {
+          console.error('Failed to load assessment details', e);
+        }
+      }
+      await startAssessment();
+    };
+    boot();
   }, []);
 
   const startAssessment = async () => {
     try {
-      const response = await api.post(`/assessments/${assessment.id}/submissions/start`);
-      setSubmissionId(response.data.id);
+      const token = localStorage.getItem('token');
+      const idToUse = assessmentData?.id || assessment.id;
+      const url = token ? `/assessments/${idToUse}/submissions/start` : `/assessments/${idToUse}/submissions/start?userId=${user?.id || ''}`;
+      const response = await api.post(url);
+      // set submission id and turn off loading
+      setSubmissionId(response?.data?.id);
+      setStartLoading(false);
     } catch (err) {
       console.error('Error starting assessment:', err);
+      setStartLoading(false);
     }
   };
 
@@ -295,7 +318,7 @@ const TakeAssessmentModal = ({ assessment, onClose, onComplete }) => {
   };
 
   const nextQuestion = () => {
-    if (currentQuestion < assessment.questions.length - 1) {
+    if (currentQuestion < (assessmentData?.questions?.length || assessment.questions.length) - 1) {
       setCurrentQuestion(currentQuestion + 1);
     }
   };
@@ -308,9 +331,10 @@ const TakeAssessmentModal = ({ assessment, onClose, onComplete }) => {
 
   const submitAssessment = async () => {
     try {
-      await api.post(`/assessments/${assessment.id}/submissions/${submissionId}/submit`, {
-        answers
-      });
+      const token = localStorage.getItem('token');
+      const idToUse = assessmentData?.id || assessment.id;
+      const url = token ? `/assessments/${idToUse}/submissions/${submissionId}/submit` : `/assessments/${idToUse}/submissions/${submissionId}/submit?userId=${user?.id || ''}`;
+      await api.post(url, { answers });
       setSubmitted(true);
       onComplete();
     } catch (err) {
@@ -330,9 +354,22 @@ const TakeAssessmentModal = ({ assessment, onClose, onComplete }) => {
     );
   }
 
-  if (!assessment.questions) return <div>Cargando...</div>;
+  if (startLoading) {
+    return (
+      <div className="modal-overlay">
+        <div className="modal-content">
+          <h3>Iniciando evaluación...</h3>
+          <p>Preparando tu evaluación, por favor espera un momento.</p>
+          <button onClick={onClose} className="btn btn-secondary">Cerrar</button>
+        </div>
+      </div>
+    );
+  }
 
-  const question = assessment.questions[currentQuestion];
+  const questions = assessmentData?.questions || assessment.questions || [];
+  if (!questions || questions.length === 0) return <div>Cargando...</div>;
+
+  const question = questions[currentQuestion];
 
   return (
     <div className="modal-overlay">
@@ -347,7 +384,9 @@ const TakeAssessmentModal = ({ assessment, onClose, onComplete }) => {
 
           {question.questionType === 'MULTIPLE_CHOICE' && (
             <div className="options">
-              {JSON.parse(question.options || '[]').map((option, index) => (
+              {(function(){
+                try { return JSON.parse(question.options || '[]'); } catch(e) { return []; }
+              })().map((option, index) => (
                 <label key={index} className="option">
                   <input
                     type="radio"
@@ -386,7 +425,7 @@ const TakeAssessmentModal = ({ assessment, onClose, onComplete }) => {
               Siguiente
             </button>
           ) : (
-            <button onClick={submitAssessment} className="btn btn-success">
+            <button onClick={submitAssessment} className="btn btn-success" disabled={!submissionId}>
               Enviar Evaluación
             </button>
           )}

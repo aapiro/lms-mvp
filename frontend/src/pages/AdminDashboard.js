@@ -19,7 +19,16 @@ function AdminDashboard() {
   const loadSummary = async () => {
     setError(null);
     try {
-      const res = await api.get('/admin/metrics/summary');
+      let res;
+      try {
+        res = await api.get('/admin/metrics/summary');
+      } catch (e) {
+        const status = e.response?.status;
+        if (status === 401 || status === 403) {
+          // fallback to public endpoint
+          res = await api.get('/admin/metrics/public-summary');
+        } else throw e;
+      }
       setSummary(res.data);
       setDebugInfo((d) => ({ ...d, lastSummaryFetch: new Date().toISOString(), summaryStatus: 'ok' }));
     } catch (e) {
@@ -32,8 +41,21 @@ function AdminDashboard() {
   const loadSeries = async () => {
     setLoading(true);
     try {
-      const res = await api.get(`/admin/metrics/sales-timeseries?from=${from}&to=${to}&interval=day`);
-      setSeries(res.data);
+      // sales-timeseries is admin-protected; try and if 401/403 skip
+      let res;
+      try {
+        res = await api.get(`/admin/metrics/sales-timeseries?from=${from}&to=${to}&interval=day`);
+      } catch (e) {
+        const status = e.response?.status;
+        if (status === 401 || status === 403) {
+          setSeries([]);
+          setDebugInfo((d) => ({ ...d, seriesStatus: 'forbidden' }));
+          return;
+        } else throw e;
+      }
+      // normalize numeric fields
+      const normalized = res.data.map(s => ({ ...s, revenueCents: Number(s.revenueCents), salesCount: Number(s.salesCount) }));
+      setSeries(normalized);
       setDebugInfo((d) => ({ ...d, lastSeriesFetch: new Date().toISOString(), seriesStatus: 'ok' }));
     } finally {
       setLoading(false);
@@ -60,7 +82,7 @@ function AdminDashboard() {
     datasets: [
       {
         label: 'Revenue (USD)',
-        data: series.map(s => (s.revenueCents/100).toFixed(2)),
+        data: series.map(s => (Number(s.revenueCents || 0)/100)),
         borderColor: 'rgba(75,192,192,1)',
         backgroundColor: 'rgba(75,192,192,0.2)'
       }
