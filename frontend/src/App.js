@@ -7,6 +7,7 @@ import Home from './pages/Home';
 import CourseDetail from './pages/CourseDetail';
 import Lesson from './pages/Lesson';
 import Admin from './pages/Admin';
+import Assessments from './pages/Assessments';
 import './App.css';
 import Header from './components/Header';
 import { ToastProvider } from './components/ToastProvider';
@@ -42,6 +43,7 @@ function App() {
                 </PrivateRoute>
               }
             />
+            <Route path="/assessments" element={<Assessments />} />
           </Routes>
         </Router>
       </ToastProvider>

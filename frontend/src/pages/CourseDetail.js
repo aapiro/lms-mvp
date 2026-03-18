@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/api';
 import { useAuth } from '../context/AuthContext';
+import Assessments from './Assessments';
 import './CourseDetail.css';
 
 function CourseDetail() {
@@ -11,6 +12,7 @@ function CourseDetail() {
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(false);
+  const [activeTab, setActiveTab] = useState('lessons');
 
   useEffect(() => {
     loadCourse();
@@ -71,6 +73,10 @@ function CourseDetail() {
     }
   };
 
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+  };
+
   if (loading) return <div className="loading">Loading...</div>;
   if (!course) return <div className="error">Course not found</div>;
 
@@ -122,35 +128,61 @@ function CourseDetail() {
         )}
       </div>
 
-      <div className="lessons-section">
-        <h2>Course Content</h2>
-        
-        {course.lessons && course.lessons.length > 0 ? (
-          <div className="lessons-list">
-            {course.lessons.map((lesson) => (
-              <div 
-                key={lesson.id} 
-                className={`lesson-item ${lesson.completed ? 'completed' : ''} ${!course.purchased ? 'locked' : ''}`}
-                onClick={() => handleLessonClick(lesson.id)}
-              >
-                <div className="lesson-info">
-                  <span className="lesson-icon">
-                    {lesson.completed ? '✓' : lesson.lessonType === 'VIDEO' ? '▶' : '📄'}
-                  </span>
-                  <div>
-                    <h3>{lesson.title}</h3>
-                    <span className="lesson-meta">
-                      {lesson.lessonType} 
-                      {lesson.durationSeconds && ` • ${Math.floor(lesson.durationSeconds / 60)} min`}
-                    </span>
+      <div className="tabs">
+        <button
+          className={`tab ${activeTab === 'lessons' ? 'active' : ''}`}
+          onClick={() => handleTabChange('lessons')}
+        >
+          Lessons
+        </button>
+        <button
+          className={`tab ${activeTab === 'assessments' ? 'active' : ''}`}
+          onClick={() => handleTabChange('assessments')}
+        >
+          Assessments
+        </button>
+      </div>
+
+      <div className="content-section">
+        {activeTab === 'lessons' && (
+          <div className="lessons-section">
+            <h2>Course Content</h2>
+
+            {course.lessons && course.lessons.length > 0 ? (
+              <div className="lessons-list">
+                {course.lessons.map((lesson) => (
+                  <div
+                    key={lesson.id}
+                    className={`lesson-item ${lesson.completed ? 'completed' : ''} ${!course.purchased ? 'locked' : ''}`}
+                    onClick={() => handleLessonClick(lesson.id)}
+                  >
+                    <div className="lesson-info">
+                      <span className="lesson-icon">
+                        {lesson.completed ? '✓' : lesson.lessonType === 'VIDEO' ? '▶' : '📄'}
+                      </span>
+                      <div>
+                        <h3>{lesson.title}</h3>
+                        <span className="lesson-meta">
+                          {lesson.lessonType}
+                          {lesson.durationSeconds && ` • ${Math.floor(lesson.durationSeconds / 60)} min`}
+                        </span>
+                      </div>
+                    </div>
+                    {!(course.purchased || course.price === 0 || course.price === '0') && <span className="lock-icon">🔒</span>}
                   </div>
-                </div>
-                {!(course.purchased || course.price === 0 || course.price === '0') && <span className="lock-icon">🔒</span>}
+                ))}
               </div>
-            ))}
+            ) : (
+              <p>No lessons available yet.</p>
+            )}
           </div>
-        ) : (
-          <p>No lessons available yet.</p>
+        )}
+
+        {activeTab === 'assessments' && (
+          <div className="assessments-section">
+            <h2>Assessments</h2>
+            <Assessments courseId={course.id} />
+          </div>
         )}
       </div>
     </div>

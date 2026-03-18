@@ -455,6 +455,13 @@
                          </button>
 
                          <button
+                           className={`admin-menu-item ${selectedMenu === 'evaluaciones' ? 'active' : ''}`}
+                           onClick={() => setSelectedMenu('evaluaciones')}
+                         >
+                           Evaluaciones
+                         </button>
+
+                         <button
                            className={`admin-menu-item ${selectedMenu === 'compras' ? 'active' : ''}`}
                            onClick={() => setSelectedMenu('compras')}
                          >
@@ -666,6 +673,13 @@
                          </div>
                        )}
 
+                       {/* Dashboard */}
+                       {selectedMenu === 'dashboard' && (
+                         <div className="admin-section">
+                           <AdminDashboard />
+                         </div>
+                       )}
+
                        {/* Placeholders for other admin sections */}
                        {selectedMenu === 'lecciones' && (
                          <div className="admin-section">
@@ -673,6 +687,15 @@
                              <h2>Lecciones</h2>
                            </div>
                            <p>Gestión de lecciones (próximamente).</p>
+                         </div>
+                       )}
+
+                       {selectedMenu === 'evaluaciones' && (
+                         <div className="admin-section">
+                           <div className="section-header">
+                             <h2>Evaluaciones</h2>
+                           </div>
+                           <p>Gestión de evaluaciones (próximamente).</p>
                          </div>
                        )}
 

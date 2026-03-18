@@ -19,7 +19,6 @@ function AdminDashboard() {
   const loadSummary = async () => {
     setError(null);
     try {
-      // try private endpoint first
       let res;
       try {
         res = await api.get('/admin/metrics/summary');
@@ -28,10 +27,7 @@ function AdminDashboard() {
         if (status === 401 || status === 403) {
           // fallback to public endpoint
           res = await api.get('/admin/metrics/public-summary');
-          setDebugInfo((d) => ({ ...d, summaryFallback: 'public' }));
-        } else {
-          throw e;
-        }
+        } else throw e;
       }
       setSummary(res.data);
       setDebugInfo((d) => ({ ...d, lastSummaryFetch: new Date().toISOString(), summaryStatus: 'ok' }));
@@ -45,23 +41,22 @@ function AdminDashboard() {
   const loadSeries = async () => {
     setLoading(true);
     try {
+      // sales-timeseries is admin-protected; try and if 401/403 skip
       let res;
       try {
         res = await api.get(`/admin/metrics/sales-timeseries?from=${from}&to=${to}&interval=day`);
       } catch (e) {
         const status = e.response?.status;
         if (status === 401 || status === 403) {
-          res = await api.get(`/admin/metrics/sales-timeseries-public?from=${from}&to=${to}&interval=day`);
-          setDebugInfo((d) => ({ ...d, seriesFallback: 'public' }));
-        } else {
-          throw e;
-        }
+          setSeries([]);
+          setDebugInfo((d) => ({ ...d, seriesStatus: 'forbidden' }));
+          return;
+        } else throw e;
       }
-      setSeries(res.data);
+      // normalize numeric fields
+      const normalized = res.data.map(s => ({ ...s, revenueCents: Number(s.revenueCents), salesCount: Number(s.salesCount) }));
+      setSeries(normalized);
       setDebugInfo((d) => ({ ...d, lastSeriesFetch: new Date().toISOString(), seriesStatus: 'ok' }));
-    } catch (e) {
-      console.error('loadSeries error', e);
-      setDebugInfo((d) => ({ ...d, lastSeriesFetch: new Date().toISOString(), seriesStatus: 'error', seriesError: '' + (e.response?.data || e.message) }));
     } finally {
       setLoading(false);
     }
@@ -87,7 +82,7 @@ function AdminDashboard() {
     datasets: [
       {
         label: 'Revenue (USD)',
-        data: series.map(s => (s.revenueCents/100).toFixed(2)),
+        data: series.map(s => (Number(s.revenueCents || 0)/100)),
         borderColor: 'rgba(75,192,192,1)',
         backgroundColor: 'rgba(75,192,192,0.2)'
       }
