@@ -463,3 +463,11 @@ node scripts/playwright-screenshot.js 22 lesson-22
 
 - El script guardará archivos: `lesson-22-full.png` (captura de la página completa) y `lesson-22-player.png` (recorte del reproductor si es posible).
 - Asegúrate de que `docker compose up` esté corriendo antes de ejecutar el script.
+
+## ⚖️ Licencia y Uso Comercial
+
+Este proyecto está bajo la licencia **Business Source License 1.1 (BSL)**.
+
+- **Para particulares, ONGs y Pequeñas Empresas:** El uso es totalmente gratuito (incluyendo uso comercial si facturas menos de $1M USD/año).
+- **Para Grandes Empresas:** Si tu organización supera los límites de la BSL, necesitas una licencia comercial para usar este software en producción.
+- **Compromiso Open Source:** En la "Change Date" (1 de enero de 2029), este código pasará automáticamente a ser **Apache 2.0**.
