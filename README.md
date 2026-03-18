@@ -6,6 +6,8 @@ Sistema completo de gestión de aprendizaje (LMS) estilo Pluralsight para cursos
 
 ![LMS Demo 2](./img_1.png)
 
+![LMS Demo 3](./img_2.png)
+
 ## 🏗️ Arquitectura
 
 ```
