@@ -443,13 +443,9 @@ docker compose down -v
 
 Este es un MVP educativo. Pull requests son bienvenidos.
 
-## 📄 Licencia
-
-MIT License - Usar libremente
-
 ---
 
-**Creado por**: Ingeniero de Software Senior  
+**Creado por**: Un simple desarrollador de software
 **Stack**: Java 17 + Spring Boot 3 + React 18 + PostgreSQL 15 + MinIO + Stripe
 
 ## Capturas headless (Playwright)
