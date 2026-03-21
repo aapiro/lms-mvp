@@ -119,6 +119,27 @@ public class UserManagementDto {
     }
 
     // ──────────────────────────────────────────────────────────────
+    // Course Students (students enrolled in a specific course)
+    // ──────────────────────────────────────────────────────────────
+
+    @Data
+    public static class CourseStudentDto {
+        private Long userId;
+        private String fullName;
+        private String email;
+        private String avatarUrl;
+        private String role;
+        private Boolean isActive;
+        private LocalDateTime lastLogin;
+        private LocalDateTime enrolledAt;
+        private Integer completedLessons;
+        private Integer totalLessons;
+        private Integer completionPercentage;
+        private String status; // NOT_STARTED, ACTIVE, COMPLETED
+        private LocalDateTime lastActivity;
+    }
+
+    // ──────────────────────────────────────────────────────────────
     // Request payloads
     // ──────────────────────────────────────────────────────────────
 

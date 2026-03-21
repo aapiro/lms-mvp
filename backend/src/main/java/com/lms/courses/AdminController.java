@@ -5,7 +5,8 @@ import com.lms.lessons.LessonService;
 import com.lms.payments.Purchase;
 import com.lms.payments.PurchaseRepository;
 import com.lms.users.User;
-import com.lms.users.UserRepository;
+import com.lms.users.UserManagementDto;
+import com.lms.users.UserManagementService;
 import com.lms.config.AuditService;
 import jakarta.validation.Valid;
 import lombok.Data;
@@ -30,7 +31,7 @@ public class AdminController {
     private final ModuleService moduleService;
     private final CategoryService categoryService;
     private final PurchaseRepository purchaseRepository;
-    private final UserRepository userRepository;
+    private final UserManagementService userManagementService;
 
     @PostMapping("/courses")
     public ResponseEntity<Course> createCourse(
@@ -78,6 +79,9 @@ public class AdminController {
             @RequestParam("title") String title,
             @RequestParam("lessonOrder") Integer lessonOrder,
             @RequestParam(value = "durationSeconds", required = false) Integer durationSeconds,
+            @RequestParam(value = "moduleId", required = false) Long moduleId,
+            @RequestParam(value = "releaseAfterDays", required = false) Integer releaseAfterDays,
+            @RequestParam(value = "availableFrom", required = false) String availableFrom,
             @RequestParam("file") MultipartFile file,
             @AuthenticationPrincipal User user
     ) {
@@ -85,7 +89,12 @@ public class AdminController {
         request.setTitle(title);
         request.setLessonOrder(lessonOrder);
         request.setDurationSeconds(durationSeconds);
-        
+        request.setModuleId(moduleId);
+        request.setReleaseAfterDays(releaseAfterDays);
+        if (availableFrom != null && !availableFrom.isBlank()) {
+            request.setAvailableFrom(java.time.LocalDateTime.parse(availableFrom));
+        }
+
         Object lesson = lessonService.createLesson(courseId, request, file);
         try {
             auditService.log(user != null ? user.getId() : null, "CREATE_LESSON", "lesson", String.valueOf(((com.lms.lessons.Lesson)lesson).getId()), "{\"title\":\"" + request.getTitle() + "\"}");
@@ -112,6 +121,9 @@ public class AdminController {
             @RequestParam(value = "title", required = false) String title,
             @RequestParam(value = "lessonOrder", required = false) Integer lessonOrder,
             @RequestParam(value = "durationSeconds", required = false) Integer durationSeconds,
+            @RequestParam(value = "moduleId", required = false) Long moduleId,
+            @RequestParam(value = "releaseAfterDays", required = false) Integer releaseAfterDays,
+            @RequestParam(value = "availableFrom", required = false) String availableFrom,
             @RequestParam(value = "file", required = false) MultipartFile file,
             @AuthenticationPrincipal User user
     ) {
@@ -119,6 +131,11 @@ public class AdminController {
         request.setTitle(title);
         request.setLessonOrder(lessonOrder);
         request.setDurationSeconds(durationSeconds);
+        request.setModuleId(moduleId);
+        request.setReleaseAfterDays(releaseAfterDays);
+        if (availableFrom != null && !availableFrom.isBlank()) {
+            request.setAvailableFrom(java.time.LocalDateTime.parse(availableFrom));
+        }
 
         Object lesson = lessonService.updateLesson(id, request, file);
         try {
@@ -229,13 +246,13 @@ public class AdminController {
 
     @PostMapping("/courses/{id}/categories")
     public ResponseEntity<Void> addCourseCategory(@PathVariable Long id, @RequestBody Map<String, Long> body) {
-        courseService.updateCourse(id, buildCategoryUpdate(body.get("categoryId"), true));
+        courseService.addCategoryToCourse(id, body.get("categoryId"));
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/courses/{id}/categories/{categoryId}")
     public ResponseEntity<Void> removeCourseCategory(@PathVariable Long id, @PathVariable Long categoryId) {
-        courseService.updateCourse(id, buildCategoryUpdate(categoryId, false));
+        courseService.removeCategoryFromCourse(id, categoryId);
         return ResponseEntity.noContent().build();
     }
 
@@ -264,14 +281,22 @@ public class AdminController {
 
     @PostMapping("/courses/{id}/tags")
     public ResponseEntity<Void> addCourseTag(@PathVariable Long id, @RequestBody Map<String, Long> body) {
-        courseService.updateCourse(id, buildTagUpdate(body.get("tagId"), true));
+        courseService.addTagToCourse(id, body.get("tagId"));
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/courses/{id}/tags/{tagId}")
     public ResponseEntity<Void> removeCourseTag(@PathVariable Long id, @PathVariable Long tagId) {
-        courseService.updateCourse(id, buildTagUpdate(tagId, false));
+        courseService.removeTagFromCourse(id, tagId);
         return ResponseEntity.noContent().build();
+    }
+
+    // ── Course Students ──────────────────────────────────────────────
+
+    @GetMapping("/courses/{courseId}/students")
+    public ResponseEntity<List<UserManagementDto.CourseStudentDto>> getCourseStudents(
+            @PathVariable Long courseId) {
+        return ResponseEntity.ok(userManagementService.getCourseStudents(courseId));
     }
 
     // ── Manual Enrollment (INVITE_ONLY) ──────────────────────────────
@@ -307,14 +332,7 @@ public class AdminController {
 
     // ── Helpers ──────────────────────────────────────────────────────
 
-    private CourseDto.UpdateCourseRequest buildCategoryUpdate(Long categoryId, boolean add) {
-        // This is a simplified helper - full category management through CourseService
-        return new CourseDto.UpdateCourseRequest();
-    }
-
-    private CourseDto.UpdateCourseRequest buildTagUpdate(Long tagId, boolean add) {
-        return new CourseDto.UpdateCourseRequest();
-    }
 }
+
 
 

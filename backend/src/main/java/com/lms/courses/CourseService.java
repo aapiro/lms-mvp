@@ -241,6 +241,44 @@ public class CourseService {
         }
     }
 
+    public boolean checkPrerequisitesMet(Long courseId, Long userId) {
+        List<CoursePrerequisite> prereqs = prerequisiteRepository.findByCourseId(courseId);
+        if (prereqs.isEmpty()) return true;
+        return prereqs.stream().allMatch(p -> checkPrerequisiteMet(p.getPrerequisiteCourseId(), userId));
+    }
+
+    @Transactional
+    public void addCategoryToCourse(Long courseId, Long categoryId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Course not found: " + courseId));
+        categoryRepository.findById(categoryId).ifPresent(course.getCategories()::add);
+        courseRepository.save(course);
+    }
+
+    @Transactional
+    public void removeCategoryFromCourse(Long courseId, Long categoryId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Course not found: " + courseId));
+        course.getCategories().removeIf(c -> c.getId().equals(categoryId));
+        courseRepository.save(course);
+    }
+
+    @Transactional
+    public void addTagToCourse(Long courseId, Long tagId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Course not found: " + courseId));
+        tagRepository.findById(tagId).ifPresent(course.getTags()::add);
+        courseRepository.save(course);
+    }
+
+    @Transactional
+    public void removeTagFromCourse(Long courseId, Long tagId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Course not found: " + courseId));
+        course.getTags().removeIf(t -> t.getId().equals(tagId));
+        courseRepository.save(course);
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────
 
     private boolean checkPrerequisiteMet(Long prereqCourseId, Long userId) {

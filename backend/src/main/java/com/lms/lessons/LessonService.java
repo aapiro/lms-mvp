@@ -59,7 +59,10 @@ public class LessonService {
         lesson.setLessonType(type);
         lesson.setFileKey(fileKey);
         lesson.setDurationSeconds(request.getDurationSeconds());
-        
+        lesson.setModuleId(request.getModuleId());
+        lesson.setReleaseAfterDays(request.getReleaseAfterDays());
+        lesson.setAvailableFrom(request.getAvailableFrom());
+
         return lessonRepository.save(lesson);
     }
     
@@ -98,7 +101,15 @@ public class LessonService {
         
         // Generar URL firmada (válida por 60 minutos)
         String presignedUrl = storageService.getPresignedUrl(lesson.getFileKey(), 60);
-        
+
+        // Calcular disponibilidad drip
+        java.time.LocalDateTime purchaseDate = null;
+        if (user != null) {
+            purchaseDate = purchaseRepository.findByUserIdAndCourseId(user.getId(), lesson.getCourseId())
+                    .map(p -> p.getPurchasedAt()).orElse(null);
+        }
+        boolean available = isLessonAvailable(lesson, purchaseDate);
+
         LessonDto.LessonResponse response = new LessonDto.LessonResponse();
         response.setId(lesson.getId());
         response.setCourseId(lesson.getCourseId());
@@ -107,6 +118,10 @@ public class LessonService {
         response.setLessonType(lesson.getLessonType().name());
         response.setDurationSeconds(lesson.getDurationSeconds());
         response.setFileUrl(presignedUrl);
+        response.setAvailable(available);
+        response.setModuleId(lesson.getModuleId());
+        response.setReleaseAfterDays(lesson.getReleaseAfterDays());
+        response.setAvailableFrom(lesson.getAvailableFrom());
         // If user is authenticated, set completed flag from progress table
         if (user != null) {
             var opt = progressRepository.findByUserIdAndLessonId(user.getId(), lessonId);
@@ -179,8 +194,24 @@ public class LessonService {
         if (request.getDurationSeconds() != null) {
             lesson.setDurationSeconds(request.getDurationSeconds());
         }
+        if (request.getModuleId() != null) {
+            lesson.setModuleId(request.getModuleId());
+        }
+        if (request.getReleaseAfterDays() != null) {
+            lesson.setReleaseAfterDays(request.getReleaseAfterDays());
+        }
+        if (request.getAvailableFrom() != null) {
+            lesson.setAvailableFrom(request.getAvailableFrom());
+        }
 
         return lessonRepository.save(lesson);
+    }
+
+    private boolean isLessonAvailable(Lesson lesson, java.time.LocalDateTime purchaseDate) {
+        if (lesson.getAvailableFrom() != null) return lesson.getAvailableFrom().isBefore(java.time.LocalDateTime.now());
+        if (lesson.getReleaseAfterDays() != null && purchaseDate != null)
+            return purchaseDate.plusDays(lesson.getReleaseAfterDays()).isBefore(java.time.LocalDateTime.now());
+        return true;
     }
 
     private boolean isAudioFile(String contentType, String fileName) {

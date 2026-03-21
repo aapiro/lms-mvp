@@ -147,6 +147,19 @@ public class UserManagementService {
     }
 
     // ──────────────────────────────────────────────────────────────
+    // COURSE STUDENTS
+    // ──────────────────────────────────────────────────────────────
+
+    public List<UserManagementDto.CourseStudentDto> getCourseStudents(Long courseId) {
+        List<Purchase> purchases = purchaseRepository
+                .findByCourseIdAndStatus(courseId, Purchase.PurchaseStatus.COMPLETED);
+        List<Lesson> lessons = lessonRepository.findByCourseIdOrderByLessonOrderAsc(courseId);
+        return purchases.stream()
+                .map(p -> buildCourseStudentDto(p.getUserId(), courseId, p.getPurchasedAt(), lessons))
+                .collect(Collectors.toList());
+    }
+
+    // ──────────────────────────────────────────────────────────────
     // ADMIN MANAGEMENT
     // ──────────────────────────────────────────────────────────────
 
@@ -244,6 +257,37 @@ public class UserManagementService {
                 .max(Comparator.comparing(Progress::getCompletedAt))
                 .ifPresent(pr -> d.setLastActivity(pr.getCompletedAt()));
         return d;
+    }
+
+    private UserManagementDto.CourseStudentDto buildCourseStudentDto(Long userId, Long courseId,
+            java.time.LocalDateTime enrolledAt, List<Lesson> lessons) {
+        UserManagementDto.CourseStudentDto dto = new UserManagementDto.CourseStudentDto();
+        userRepository.findById(userId).ifPresent(u -> {
+            dto.setUserId(u.getId());
+            dto.setFullName(u.getFullName());
+            dto.setEmail(u.getEmail());
+            dto.setAvatarUrl(u.getAvatarUrl());
+            dto.setRole(u.getRole() != null ? u.getRole().name() : null);
+            dto.setIsActive(u.getIsActive());
+            dto.setLastLogin(u.getLastLogin());
+        });
+        dto.setEnrolledAt(enrolledAt);
+
+        List<Progress> progressList = progressRepository.findByUserIdAndCourseId(userId, courseId);
+        long done = progressList.stream()
+                .filter(pr -> Boolean.TRUE.equals(pr.getCompleted())).count();
+        int pct = lessons.isEmpty() ? 0 : (int) (done * 100 / lessons.size());
+
+        dto.setCompletedLessons((int) done);
+        dto.setTotalLessons(lessons.size());
+        dto.setCompletionPercentage(pct);
+        dto.setStatus(pct >= 100 ? "COMPLETED" : done > 0 ? "ACTIVE" : "NOT_STARTED");
+
+        progressList.stream()
+                .filter(pr -> pr.getCompletedAt() != null)
+                .max(Comparator.comparing(Progress::getCompletedAt))
+                .ifPresent(pr -> dto.setLastActivity(pr.getCompletedAt()));
+        return dto;
     }
 
     private UserManagementDto.CertificateDto buildCertificateDto(Certificate c) {

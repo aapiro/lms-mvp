@@ -37,7 +37,10 @@
                  title: '',
                  lessonOrder: 1,
                  durationSeconds: '',
-                 file: null
+                 file: null,
+                 moduleId: '',
+                 releaseAfterDays: '',
+                 availableFrom: ''
                });
 
                // NEW: state for submenu selection (default to Cursos)
@@ -46,6 +49,7 @@
                const [showCourseDetail, setShowCourseDetail] = useState(false);
                const [courseDetail, setCourseDetail] = useState(null);
                const [detailLoading, setDetailLoading] = useState(false);
+               const [prereqNewCourseId, setPrereqNewCourseId] = useState('');
 
                // NEW: users management state
                const [users, setUsers] = useState([]);
@@ -98,6 +102,12 @@
                const [showProfileEdit, setShowProfileEdit] = useState(false);
                const [profileEditUserId, setProfileEditUserId] = useState(null);
                const [profileEditType, setProfileEditType] = useState('students');
+
+               // ── Course Students ───────────────────────────────
+               const [showCourseStudents, setShowCourseStudents] = useState(false);
+               const [courseStudentsList, setCourseStudentsList] = useState([]);
+               const [courseStudentsCourse, setCourseStudentsCourse] = useState(null);
+               const [loadingCourseStudents, setLoadingCourseStudents] = useState(false);
                const [profileForm, setProfileForm] = useState({ fullName: '', bio: '', avatarUrl: '' });
 
                // ── Admin Management ──────────────────────────────
@@ -331,6 +341,30 @@
                  setShowCourseDetail(false);
                  setCourseDetail(null);
                  setDetailLoading(false);
+                 setPrereqNewCourseId('');
+               };
+
+               const handleAddPrerequisite = async () => {
+                 if (!prereqNewCourseId || !courseDetail) return;
+                 try {
+                   await api.post(`/admin/courses/${courseDetail.id}/prerequisites`, { prerequisiteCourseId: Number(prereqNewCourseId) });
+                   setPrereqNewCourseId('');
+                   const res = await api.get(`/courses/${courseDetail.id}`);
+                   setCourseDetail(res.data);
+                 } catch (err) {
+                   alert('Error al agregar prerrequisito: ' + (err.response?.data?.message || err.message));
+                 }
+               };
+
+               const handleRemovePrerequisite = async (prereqCourseId) => {
+                 if (!courseDetail) return;
+                 try {
+                   await api.delete(`/admin/courses/${courseDetail.id}/prerequisites/${prereqCourseId}`);
+                   const res = await api.get(`/courses/${courseDetail.id}`);
+                   setCourseDetail(res.data);
+                 } catch (err) {
+                   alert('Error al eliminar prerrequisito: ' + (err.response?.data?.message || err.message));
+                 }
                };
 
                const loadCourses = async () => {
@@ -532,6 +566,15 @@
                  if (lessonForm.durationSeconds) {
                    formData.append('durationSeconds', lessonForm.durationSeconds);
                  }
+                 if (lessonForm.moduleId) {
+                   formData.append('moduleId', lessonForm.moduleId);
+                 }
+                 if (lessonForm.releaseAfterDays) {
+                   formData.append('releaseAfterDays', lessonForm.releaseAfterDays);
+                 }
+                 if (lessonForm.availableFrom) {
+                   formData.append('availableFrom', lessonForm.availableFrom);
+                 }
                  if (lessonForm.file) {
                    formData.append('file', lessonForm.file);
                  }
@@ -549,7 +592,7 @@
                      alert('Lesson created successfully!');
                    }
 
-                   setLessonForm({ title: '', lessonOrder: 1, durationSeconds: '', file: null });
+                   setLessonForm({ title: '', lessonOrder: 1, durationSeconds: '', file: null, moduleId: '', releaseAfterDays: '', availableFrom: '' });
                    setShowLessonForm(false);
                    setSelectedCourse(null);
                    setIsEditingLesson(false);
@@ -572,7 +615,10 @@
                    title: lesson.title || '',
                    lessonOrder: lesson.lessonOrder || 1,
                    durationSeconds: lesson.durationSeconds || '',
-                   file: null
+                   file: null,
+                   moduleId: lesson.moduleId || '',
+                   releaseAfterDays: lesson.releaseAfterDays || '',
+                   availableFrom: lesson.availableFrom ? lesson.availableFrom.substring(0, 16) : ''
                  });
                  setShowLessonForm(true);
                  // No need to set selectedCourse since it's already in courseDetail
@@ -657,6 +703,22 @@
                    setShowStudentProgress(true);
                  } catch (err) {
                    addToast('Error cargando progreso', { type: 'error' });
+                 }
+               };
+
+               // ── Course Students ───────────────────────────────
+               const openCourseStudents = async (course) => {
+                 setCourseStudentsCourse(course);
+                 setShowCourseStudents(true);
+                 setLoadingCourseStudents(true);
+                 try {
+                   const res = await api.get(`/admin/courses/${course.id}/students`);
+                   setCourseStudentsList(res.data);
+                 } catch (err) {
+                   addToast('Error cargando estudiantes del curso', { type: 'error' });
+                   setShowCourseStudents(false);
+                 } finally {
+                   setLoadingCourseStudents(false);
                  }
                };
 
@@ -1009,6 +1071,13 @@
                                      className="btn-detail"
                                    >
                                      Ver detalle
+                                   </button>
+                                   <button
+                                     onClick={() => openCourseStudents(course)}
+                                     className="btn-create"
+                                     style={{ fontSize: 12 }}
+                                   >
+                                     👥 Estudiantes
                                    </button>
                                    <button
                                      onClick={() => {
@@ -1710,7 +1779,16 @@
                            <>
                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                <h2>{courseDetail.title}</h2>
-                               <button className="btn-cancel" onClick={closeCourseDetail}>Cerrar</button>
+                               <div style={{ display: 'flex', gap: 8 }}>
+                                 <button
+                                   className="btn-create"
+                                   style={{ fontSize: 13 }}
+                                   onClick={() => { closeCourseDetail(); openCourseStudents(courseDetail); }}
+                                 >
+                                   👥 Ver Estudiantes
+                                 </button>
+                                 <button className="btn-cancel" onClick={closeCourseDetail}>Cerrar</button>
+                               </div>
                              </div>
 
                              <div style={{ marginTop: 12 }}>
@@ -1774,6 +1852,43 @@
                                  <p>No hay lecciones todavía.</p>
                                )}
                              </div>
+
+                             {/* ── Prerrequisitos ── */}
+                             <div style={{ marginTop: 24, borderTop: '1px solid #eee', paddingTop: 16 }}>
+                               <h3 style={{ marginBottom: 12 }}>Prerrequisitos</h3>
+                               {courseDetail.prerequisites && courseDetail.prerequisites.length > 0 ? (
+                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
+                                   {courseDetail.prerequisites.map((p) => (
+                                     <div key={p.courseId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: '#f8f9fa', borderRadius: 6 }}>
+                                       <span style={{ fontSize: 14 }}>{p.courseTitle || `Curso #${p.courseId}`}</span>
+                                       <button className="btn-delete" style={{ padding: '4px 10px', fontSize: 12 }}
+                                         onClick={() => handleRemovePrerequisite(p.courseId)}>
+                                         Eliminar
+                                       </button>
+                                     </div>
+                                   ))}
+                                 </div>
+                               ) : (
+                                 <p style={{ color: '#999', fontSize: 13, marginBottom: 12 }}>Sin prerrequisitos.</p>
+                               )}
+                               <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                                 <select
+                                   className="role-select"
+                                   style={{ flex: 1, minWidth: 180 }}
+                                   value={prereqNewCourseId}
+                                   onChange={(e) => setPrereqNewCourseId(e.target.value)}
+                                 >
+                                   <option value="">— Seleccionar curso prerrequisito —</option>
+                                   {courses.filter(c => c.id !== courseDetail.id).map(c => (
+                                     <option key={c.id} value={c.id}>{c.title}</option>
+                                   ))}
+                                 </select>
+                                 <button className="btn-submit" style={{ padding: '8px 14px' }}
+                                   onClick={handleAddPrerequisite} disabled={!prereqNewCourseId}>
+                                   + Agregar
+                                 </button>
+                               </div>
+                             </div>
                            </>
                          ) : (
                            <div style={{ padding: 40, textAlign: 'center' }}>No se encontró el curso.</div>
@@ -1807,11 +1922,31 @@
                              value={lessonForm.durationSeconds}
                              onChange={(e) => setLessonForm({ ...lessonForm, durationSeconds: e.target.value })}
                            />
+                           <input
+                             type="number"
+                             placeholder="Module ID (optional)"
+                             value={lessonForm.moduleId}
+                             onChange={(e) => setLessonForm({ ...lessonForm, moduleId: e.target.value })}
+                           />
+                           <input
+                             type="number"
+                             placeholder="Días hasta disponible (drip) - opcional"
+                             value={lessonForm.releaseAfterDays}
+                             onChange={(e) => setLessonForm({ ...lessonForm, releaseAfterDays: e.target.value })}
+                           />
                            <div className="file-input">
-                             <label>Upload Video or PDF {isEditingLesson ? '(optional, leave empty to keep current file)' : ''}</label>
+                             <label>Disponible desde (fecha/hora) - opcional</label>
+                             <input
+                               type="datetime-local"
+                               value={lessonForm.availableFrom}
+                               onChange={(e) => setLessonForm({ ...lessonForm, availableFrom: e.target.value })}
+                             />
+                           </div>
+                           <div className="file-input">
+                             <label>Upload Video, PDF or Audio {isEditingLesson ? '(optional, leave empty to keep current file)' : ''}</label>
                              <input
                                type="file"
-                               accept="video/*,application/pdf"
+                               accept="video/*,application/pdf,audio/*"
                                onChange={(e) => setLessonForm({ ...lessonForm, file: e.target.files[0] })}
                                required={!isEditingLesson}
                              />
@@ -1825,7 +1960,7 @@
                                  setSelectedCourse(null);
                                  setIsEditingLesson(false);
                                  setEditingLessonId(null);
-                                 setLessonForm({ title: '', lessonOrder: 1, durationSeconds: '', file: null });
+                                 setLessonForm({ title: '', lessonOrder: 1, durationSeconds: '', file: null, moduleId: '', releaseAfterDays: '', availableFrom: '' });
                                }}
                                className="btn-cancel"
                              >
@@ -1877,9 +2012,105 @@
                      </div>
                    )}
 
+                   {/* ── Course Students Modal ── */}
+                   {showCourseStudents && (
+                     <div className="modal" role="dialog" aria-modal="true" style={{ zIndex: 1000 }}>
+                       <div className="modal-content course-detail-modal" style={{ maxWidth: 800 }}>
+                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                           <div>
+                             <h2 style={{ margin: 0 }}>Estudiantes del Curso</h2>
+                             {courseStudentsCourse && (
+                               <p style={{ margin: '4px 0 0', color: '#666', fontSize: 14 }}>{courseStudentsCourse.title}</p>
+                             )}
+                           </div>
+                           <button className="btn-cancel" onClick={() => { setShowCourseStudents(false); setCourseStudentsList([]); setCourseStudentsCourse(null); }}>Cerrar</button>
+                         </div>
+
+                         {loadingCourseStudents ? (
+                           <div style={{ padding: 40, textAlign: 'center' }}>Cargando estudiantes...</div>
+                         ) : courseStudentsList.length === 0 ? (
+                           <div style={{ padding: 32, textAlign: 'center', color: '#888' }}>
+                             <span style={{ fontSize: 40 }}>👥</span>
+                             <p style={{ marginTop: 12 }}>No hay estudiantes inscritos en este curso todavía.</p>
+                           </div>
+                         ) : (
+                           <>
+                             <div style={{ marginBottom: 16, padding: '10px 16px', background: '#f0f4ff', borderRadius: 8, fontSize: 14, color: '#555' }}>
+                               <strong>{courseStudentsList.length}</strong> estudiante{courseStudentsList.length !== 1 ? 's' : ''} inscritos
+                               {' • '}
+                               <strong>{courseStudentsList.filter(s => s.status === 'COMPLETED').length}</strong> completados
+                               {' • '}
+                               <strong>{courseStudentsList.filter(s => s.status === 'ACTIVE').length}</strong> en progreso
+                             </div>
+                             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 500, overflowY: 'auto' }}>
+                               {courseStudentsList.map((student) => (
+                                 <div key={student.userId} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', background: '#fff', border: '1px solid #e8ecf0', borderRadius: 10, boxShadow: '0 1px 3px rgba(0,0,0,.05)' }}>
+                                   {/* Avatar */}
+                                   <div style={{ width: 42, height: 42, borderRadius: '50%', background: '#667eea', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 18, flexShrink: 0 }}>
+                                     {student.avatarUrl
+                                       ? <img src={student.avatarUrl} alt={student.fullName} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                                       : (student.fullName || '?').charAt(0).toUpperCase()
+                                     }
+                                   </div>
+                                   {/* Info */}
+                                   <div style={{ flex: 1, minWidth: 0 }}>
+                                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                                       <strong style={{ fontSize: 15 }}>{student.fullName}</strong>
+                                       <span style={{
+                                         fontSize: 11, padding: '2px 8px', borderRadius: 12, fontWeight: 600,
+                                         background: student.status === 'COMPLETED' ? '#d1fae5' : student.status === 'ACTIVE' ? '#dbeafe' : '#f3f4f6',
+                                         color: student.status === 'COMPLETED' ? '#065f46' : student.status === 'ACTIVE' ? '#1e40af' : '#6b7280'
+                                       }}>
+                                         {student.status === 'COMPLETED' ? '✓ Completado' : student.status === 'ACTIVE' ? '▶ En progreso' : '○ No iniciado'}
+                                       </span>
+                                       {!student.isActive && <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 12, background: '#fee2e2', color: '#991b1b', fontWeight: 600 }}>Inactivo</span>}
+                                     </div>
+                                     <div style={{ fontSize: 13, color: '#666', marginTop: 2 }}>{student.email}</div>
+                                     {/* Progress bar */}
+                                     <div style={{ marginTop: 8 }}>
+                                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#888', marginBottom: 4 }}>
+                                         <span>{student.completedLessons}/{student.totalLessons} lecciones completadas</span>
+                                         <span style={{ fontWeight: 700, color: '#667eea' }}>{student.completionPercentage || 0}%</span>
+                                       </div>
+                                       <div style={{ height: 8, background: '#e5e7eb', borderRadius: 4, overflow: 'hidden' }}>
+                                         <div style={{ width: `${student.completionPercentage || 0}%`, height: '100%', background: student.status === 'COMPLETED' ? '#10b981' : '#667eea', transition: 'width .3s ease' }} />
+                                       </div>
+                                     </div>
+                                     <div style={{ display: 'flex', gap: 16, marginTop: 6, fontSize: 12, color: '#999' }}>
+                                       {student.enrolledAt && <span>📅 Inscrito: {new Date(student.enrolledAt).toLocaleDateString()}</span>}
+                                       {student.lastActivity && <span>🕒 Última actividad: {new Date(student.lastActivity).toLocaleDateString()}</span>}
+                                       {student.lastLogin && <span>🔑 Último acceso: {new Date(student.lastLogin).toLocaleDateString()}</span>}
+                                     </div>
+                                   </div>
+                                   {/* Actions */}
+                                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
+                                     <button
+                                       className="btn-detail"
+                                       style={{ fontSize: 12, padding: '5px 12px' }}
+                                       onClick={() => openStudentDetail(student.userId)}
+                                     >
+                                       Ver perfil
+                                     </button>
+                                     <button
+                                       className="btn-create"
+                                       style={{ fontSize: 12, padding: '5px 12px' }}
+                                       onClick={() => openStudentProgress(student.userId)}
+                                     >
+                                       Progreso
+                                     </button>
+                                   </div>
+                                 </div>
+                               ))}
+                             </div>
+                           </>
+                         )}
+                       </div>
+                     </div>
+                   )}
+
                    {/* ── Student Detail Modal ── */}
                    {showStudentDetail && studentDetail && (
-                     <div className="modal" role="dialog" aria-modal="true">
+                     <div className="modal" role="dialog" aria-modal="true" style={{ zIndex: 1100 }}>
                        <div className="modal-content user-detail-modal">
                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                            <h2>{studentDetail.fullName}</h2>
@@ -1912,7 +2143,7 @@
 
                    {/* ── Student Progress Modal ── */}
                    {showStudentProgress && (
-                     <div className="modal" role="dialog" aria-modal="true">
+                     <div className="modal" role="dialog" aria-modal="true" style={{ zIndex: 1100 }}>
                        <div className="modal-content">
                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                            <h2>Progreso del Estudiante</h2>
@@ -1968,8 +2199,7 @@
                    )}
 
                    {/* ── Profile Edit Modal ── */}
-                   {showProfileEdit && (
-                     <div className="modal" role="dialog" aria-modal="true">
+                   {showProfileEdit && (                     <div className="modal" role="dialog" aria-modal="true">
                        <div className="modal-content">
                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                            <h2>Editar Perfil</h2>
