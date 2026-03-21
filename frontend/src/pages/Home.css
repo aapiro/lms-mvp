@@ -180,3 +180,53 @@
   padding: 40px;
   color: #666;
 }
+
+/* ── Course filters ───────────────────────────────── */
+.course-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 24px;
+  padding: 14px 16px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+}
+
+.course-filters select {
+  padding: 7px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: #444;
+  background: #fafafa;
+  cursor: pointer;
+}
+
+.btn-clear-filters {
+  padding: 7px 14px;
+  background: transparent;
+  color: #667eea;
+  border: 1px solid #667eea;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.btn-clear-filters:hover { background: #f0f0ff; }
+
+/* ── Status badges ────────────────────────────────── */
+.badge-status { padding: 2px 8px; border-radius: 12px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; margin-left: 8px; }
+.badge-draft   { background: #f0f0f0; color: #888; }
+.badge-published { background: #d4edda; color: #155724; }
+.badge-archived { background: #fff3cd; color: #856404; }
+
+/* ── Taxonomy badges ──────────────────────────────── */
+.course-taxonomy { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.badge-cat { padding: 2px 8px; background: #e8f4fd; color: #1a6fa3; border-radius: 12px; font-size: 0.78rem; font-weight: 500; }
+.badge-tag { padding: 2px 8px; background: #f0e8fd; color: #6a1fa3; border-radius: 12px; font-size: 0.78rem; font-weight: 500; }
+
+/* ── Enrollment badges ────────────────────────────── */
+.badge-invite { padding: 2px 8px; background: #fff3cd; color: #856404; border-radius: 12px; font-size: 0.78rem; font-weight: 600; }
+.badge-capacity { padding: 2px 8px; background: #f0f0f0; color: #555; border-radius: 12px; font-size: 0.78rem; }
+
+.course-title-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }

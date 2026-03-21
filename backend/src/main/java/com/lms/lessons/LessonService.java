@@ -33,18 +33,23 @@ public class LessonService {
     ) {
         // Determinar tipo según archivo
         String contentType = file.getContentType();
+        String originalName = file.getOriginalFilename() != null ? file.getOriginalFilename().toLowerCase() : "";
         Lesson.LessonType type;
         
         if (contentType != null && contentType.startsWith("video/")) {
             type = Lesson.LessonType.VIDEO;
         } else if (contentType != null && contentType.equals("application/pdf")) {
             type = Lesson.LessonType.PDF;
+        } else if (isAudioFile(contentType, originalName)) {
+            type = Lesson.LessonType.AUDIO;
         } else {
-            throw new RuntimeException("Invalid file type. Only videos and PDFs are supported.");
+            throw new RuntimeException("Invalid file type. Only videos, PDFs and audio files are supported.");
         }
         
         // Subir archivo a MinIO
-        String folder = type == Lesson.LessonType.VIDEO ? "videos" : "pdfs";
+        String folder = type == Lesson.LessonType.VIDEO ? "videos"
+                      : type == Lesson.LessonType.AUDIO ? "audios"
+                      : "pdfs";
         String fileKey = storageService.uploadFile(file, folder);
         
         Lesson lesson = new Lesson();
@@ -137,18 +142,23 @@ public class LessonService {
         if (file != null && !file.isEmpty()) {
             // Determine type based on new file
             String contentType = file.getContentType();
+            String originalName = file.getOriginalFilename() != null ? file.getOriginalFilename().toLowerCase() : "";
             Lesson.LessonType newType;
 
             if (contentType != null && contentType.startsWith("video/")) {
                 newType = Lesson.LessonType.VIDEO;
             } else if (contentType != null && contentType.equals("application/pdf")) {
                 newType = Lesson.LessonType.PDF;
+            } else if (isAudioFile(contentType, originalName)) {
+                newType = Lesson.LessonType.AUDIO;
             } else {
-                throw new RuntimeException("Invalid file type. Only videos and PDFs are supported.");
+                throw new RuntimeException("Invalid file type. Only videos, PDFs and audio files are supported.");
             }
 
             // Upload new file
-            String folder = newType == Lesson.LessonType.VIDEO ? "videos" : "pdfs";
+            String folder = newType == Lesson.LessonType.VIDEO ? "videos"
+                          : newType == Lesson.LessonType.AUDIO ? "audios"
+                          : "pdfs";
             String newFileKey = storageService.uploadFile(file, folder);
 
             // Delete old file
@@ -171,5 +181,13 @@ public class LessonService {
         }
 
         return lessonRepository.save(lesson);
+    }
+
+    private boolean isAudioFile(String contentType, String fileName) {
+        if (contentType != null && contentType.startsWith("audio/")) return true;
+        // browser may send application/octet-stream for some audio files
+        if (fileName.endsWith(".mp3") || fileName.endsWith(".m4a") || fileName.endsWith(".wav")
+                || fileName.endsWith(".aac") || fileName.endsWith(".ogg")) return true;
+        return false;
     }
 }

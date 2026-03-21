@@ -1,4 +1,4 @@
-package com.lms.assessments;
+package com.lms.courses;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -6,8 +6,8 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Table(name = "assessments")
-public class Assessment {
+@Table(name = "modules")
+public class Module {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,20 +19,11 @@ public class Assessment {
     @Column(nullable = false)
     private String title;
 
-    @Column(length = 1000)
+    @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "start_date")
-    private LocalDateTime startDate;
-
-    @Column(name = "end_date")
-    private LocalDateTime endDate;
-
-    @Column(name = "duration_minutes")
-    private Integer durationMinutes;
-
-    @Column(name = "total_points")
-    private Integer totalPoints;
+    @Column(name = "module_order", nullable = false)
+    private Integer moduleOrder = 1;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -40,17 +31,9 @@ public class Assessment {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt = LocalDateTime.now();
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "assessment_type", nullable = false)
-    private AssessmentType assessmentType = AssessmentType.QUIZ;
-
-    @Column(name = "lesson_id")
-    private Long lessonId;
-
-    public enum AssessmentType { QUIZ, ASSIGNMENT }
-
     @PreUpdate
     public void preUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
 }
+

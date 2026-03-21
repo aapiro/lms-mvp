@@ -237,3 +237,64 @@
 .content-section {
   min-height: 400px;
 }
+
+/* ── Modules ──────────────────────────────────────── */
+.module-section {
+  margin-bottom: 24px;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.module-title {
+  margin: 0;
+  padding: 12px 16px;
+  background: #f8f9fa;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #333;
+  border-bottom: 1px solid #e8e8e8;
+  border-left: 4px solid #667eea;
+}
+
+.module-description {
+  padding: 8px 16px;
+  margin: 0;
+  color: #666;
+  font-size: 0.9rem;
+  background: #fafafa;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+/* ── Prerequisites warning ──────────────────────────── */
+.prereq-warning {
+  background: #e8f4fd;
+  border: 1px solid #bee5eb;
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  color: #0c5460;
+}
+
+.prereq-link {
+  padding: 4px 10px;
+  background: white;
+  color: #667eea;
+  border: 1px solid #667eea;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  text-decoration: none;
+  font-weight: 500;
+}
+.prereq-link:hover { background: #f0f0ff; }
+
+/* ── Drip lock ────────────────────────────────────── */
+.drip-locked { opacity: 0.65; cursor: default !important; }
+.drip-lock { color: #e67e22; font-size: 0.8rem; font-weight: 500; }
+
+/* ── Taxonomy on course detail ──────────────────────── */
+.course-taxonomy { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.badge-cat { padding: 3px 10px; background: #e8f4fd; color: #1a6fa3; border-radius: 12px; font-size: 0.8rem; font-weight: 500; }
+.badge-tag { padding: 3px 10px; background: #f0e8fd; color: #6a1fa3; border-radius: 12px; font-size: 0.8rem; font-weight: 500; }
+.badge-invite { padding: 3px 10px; background: #fff3cd; color: #856404; border-radius: 12px; font-size: 0.8rem; font-weight: 600; }
+.badge-capacity { padding: 3px 10px; background: #f0f0f0; color: #555; border-radius: 12px; font-size: 0.8rem; }

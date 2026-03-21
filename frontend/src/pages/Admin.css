@@ -148,11 +148,6 @@
   font-size: 14px;
 }
 
-.course-actions {
-  display: flex;
-  gap: 10px;
-}
-
 .btn-detail {
   padding: 10px 16px;
   background: #3b82f6;
@@ -631,5 +626,181 @@
   transform: scale(1.3);
   z-index: 1;
   position: relative;
+}
+
+/* ── Status badges (admin) ────────────────────────── */
+.badge-status {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.badge-draft     { background: #f0f0f0; color: #888; }
+.badge-published { background: #d4edda; color: #155724; }
+.badge-archived  { background: #fff3cd; color: #856404; }
+
+/* ── Purchases list ───────────────────────────────── */
+.purchases-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.purchase-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.purchase-item:hover {
+  border-color: #667eea;
+}
+
+/* ── Audit logs ───────────────────────────────────── */
+.audit-logs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.audit-log-item {
+  padding: 12px 16px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.log-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 6px;
+  align-items: center;
+}
+
+.log-date {
+  color: #888;
+  font-size: 0.82rem;
+}
+
+.log-action {
+  font-weight: 700;
+  color: #333;
+  font-size: 0.9rem;
+}
+
+.log-actor {
+  color: #667eea;
+  font-size: 0.85rem;
+}
+
+.log-details {
+  background: #f8f9fa;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  overflow: auto;
+  max-height: 120px;
+}
+
+.log-details pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: #555;
+}
+
+/* ── Pagination button ────────────────────────────── */
+.btn-paginate {
+  padding: 8px 16px;
+  background: #f0f0f0;
+  color: #444;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-right: 8px;
+}
+
+.btn-paginate:hover:not(:disabled) {
+  background: #e0e0f0;
+}
+
+.btn-paginate:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Course detail modal (wider) ──────────────────── */
+.course-detail-modal {
+  max-width: 700px;
+  width: 100%;
+}
+
+/* ── Lesson action buttons in course modal ────────── */
+.btn-edit-lesson {
+  padding: 5px 10px;
+  background: #f39c12;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-edit-lesson:hover {
+  background: #d48806;
+}
+
+.btn-delete-lesson {
+  padding: 5px 10px;
+  background: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-delete-lesson:hover {
+  background: #c0392b;
+}
+
+/* ── Back button ──────────────────────────────────── */
+.btn-back {
+  padding: 10px 20px;
+  background: #666;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.btn-back:hover {
+  background: #555;
+}
+
+/* ── Course actions column layout ─────────────────── */
+.course-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
 }
 

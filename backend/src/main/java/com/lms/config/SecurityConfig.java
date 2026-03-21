@@ -41,6 +41,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/payments/webhook").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/courses", "/api/courses/*").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/courses/categories", "/api/courses/tags").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/lessons/*", "/api/lessons/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/assessments/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/assessments/*/submissions/*").permitAll() // Permitir POST a submissions sin autenticación

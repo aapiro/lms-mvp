@@ -23,7 +23,14 @@
                const [courseForm, setCourseForm] = useState({
                  title: '',
                  description: '',
-                 price: ''
+                 price: '',
+                 status: 'PUBLISHED',
+                 enrollmentType: 'OPEN',
+                 capacityLimit: '',
+                 certificateTemplate: '',
+                 categoryIds: [],
+                 tagIds: [],
+                 prerequisiteCourseIds: []
                });
 
                const [lessonForm, setLessonForm] = useState({
@@ -99,6 +106,26 @@
                const [certUserId, setCertUserId] = useState('');
                const [certCourseId, setCertCourseId] = useState('');
 
+               // ── Modules state ─────────────────────────────────
+               const [allCategories, setAllCategories] = useState([]);
+               const [allTags, setAllTags] = useState([]);
+               const [modulesCourseId, setModulesCourseId] = useState('');
+               const [modules, setModules] = useState([]);
+               const [showModuleForm, setShowModuleForm] = useState(false);
+               const [isEditingModule, setIsEditingModule] = useState(false);
+               const [editingModuleId, setEditingModuleId] = useState(null);
+               const [moduleForm, setModuleForm] = useState({ title: '', description: '', moduleOrder: 1 });
+
+               // ── Categories/Tags state ─────────────────────────
+               const [showCategoryForm, setShowCategoryForm] = useState(false);
+               const [isEditingCategory, setIsEditingCategory] = useState(false);
+               const [editingCategoryId, setEditingCategoryId] = useState(null);
+               const [categoryForm, setCategoryForm] = useState({ name: '', slug: '', description: '' });
+               const [showTagForm, setShowTagForm] = useState(false);
+               const [isEditingTag, setIsEditingTag] = useState(false);
+               const [editingTagId, setEditingTagId] = useState(null);
+               const [tagForm, setTagForm] = useState({ name: '', slug: '' });
+
                const { addToast } = useToast();
 
                const [hasAdminAccess, setHasAdminAccess] = useState(null);
@@ -111,6 +138,9 @@
                    } else {
                      setHasAdminAccess(true);
                      loadCourses();
+                     // load categories and tags for course form dropdowns
+                     api.get('/admin/categories').then(r => setAllCategories(r.data)).catch(() => {});
+                     api.get('/admin/tags').then(r => setAllTags(r.data)).catch(() => {});
                    }
                  };
                  check();
@@ -137,6 +167,10 @@
                  }
                  if (selectedMenu === 'students') loadStudents(0);
                  if (selectedMenu === 'instructors') loadInstructors(0);
+                 if (selectedMenu === 'categorias') {
+                   loadCategoriesAdmin();
+                   loadTagsAdmin();
+                 }
                }, [selectedMenu]);
 
                const loadUsers = async () => {
@@ -308,25 +342,153 @@
                  }
                };
 
+               // ── Modules CRUD ──────────────────────────────────
+               const loadModules = async (courseId) => {
+                 if (!courseId) return;
+                 try {
+                   const res = await api.get(`/admin/courses/${courseId}/modules`);
+                   setModules(res.data);
+                 } catch (err) {
+                   addToast('Error cargando módulos', { type: 'error' });
+                 }
+               };
+
+               const handleSaveModule = async (e) => {
+                 e.preventDefault();
+                 try {
+                   if (isEditingModule && editingModuleId) {
+                     await api.put(`/admin/modules/${editingModuleId}`, moduleForm);
+                     addToast('Módulo actualizado', { type: 'success' });
+                   } else {
+                     await api.post(`/admin/courses/${modulesCourseId}/modules`, moduleForm);
+                     addToast('Módulo creado', { type: 'success' });
+                   }
+                   setModuleForm({ title: '', description: '', moduleOrder: 1 });
+                   setShowModuleForm(false);
+                   setIsEditingModule(false);
+                   setEditingModuleId(null);
+                   loadModules(modulesCourseId);
+                 } catch (err) {
+                   addToast(err.response?.data?.error || 'Error guardando módulo', { type: 'error' });
+                 }
+               };
+
+               const handleDeleteModule = async (moduleId) => {
+                 if (!window.confirm('¿Eliminar este módulo? Las lecciones asignadas quedarán sin módulo.')) return;
+                 try {
+                   await api.delete(`/admin/modules/${moduleId}`);
+                   addToast('Módulo eliminado', { type: 'success' });
+                   loadModules(modulesCourseId);
+                 } catch (err) {
+                   addToast('Error eliminando módulo', { type: 'error' });
+                 }
+               };
+
+               // ── Categories CRUD ───────────────────────────────
+               const loadCategoriesAdmin = async () => {
+                 try {
+                   const res = await api.get('/admin/categories');
+                   setAllCategories(res.data);
+                 } catch (err) {
+                   addToast('Error cargando categorías', { type: 'error' });
+                 }
+               };
+
+               const loadTagsAdmin = async () => {
+                 try {
+                   const res = await api.get('/admin/tags');
+                   setAllTags(res.data);
+                 } catch (err) {
+                   addToast('Error cargando etiquetas', { type: 'error' });
+                 }
+               };
+
+               const handleSaveCategory = async (e) => {
+                 e.preventDefault();
+                 try {
+                   if (isEditingCategory && editingCategoryId) {
+                     await api.put(`/admin/categories/${editingCategoryId}`, categoryForm);
+                     addToast('Categoría actualizada', { type: 'success' });
+                   } else {
+                     await api.post('/admin/categories', categoryForm);
+                     addToast('Categoría creada', { type: 'success' });
+                   }
+                   setCategoryForm({ name: '', slug: '', description: '' });
+                   setShowCategoryForm(false);
+                   setIsEditingCategory(false);
+                   setEditingCategoryId(null);
+                   loadCategoriesAdmin();
+                 } catch (err) {
+                   addToast(err.response?.data?.error || 'Error guardando categoría', { type: 'error' });
+                 }
+               };
+
+               const handleDeleteCategory = async (id) => {
+                 if (!window.confirm('¿Eliminar esta categoría?')) return;
+                 try {
+                   await api.delete(`/admin/categories/${id}`);
+                   addToast('Categoría eliminada', { type: 'success' });
+                   loadCategoriesAdmin();
+                 } catch (err) {
+                   addToast('Error eliminando categoría', { type: 'error' });
+                 }
+               };
+
+               const handleSaveTag = async (e) => {
+                 e.preventDefault();
+                 try {
+                   if (isEditingTag && editingTagId) {
+                     await api.put(`/admin/tags/${editingTagId}`, tagForm);
+                     addToast('Etiqueta actualizada', { type: 'success' });
+                   } else {
+                     await api.post('/admin/tags', tagForm);
+                     addToast('Etiqueta creada', { type: 'success' });
+                   }
+                   setTagForm({ name: '', slug: '' });
+                   setShowTagForm(false);
+                   setIsEditingTag(false);
+                   setEditingTagId(null);
+                   loadTagsAdmin();
+                 } catch (err) {
+                   addToast(err.response?.data?.error || 'Error guardando etiqueta', { type: 'error' });
+                 }
+               };
+
+               const handleDeleteTag = async (id) => {
+                 if (!window.confirm('¿Eliminar esta etiqueta?')) return;
+                 try {
+                   await api.delete(`/admin/tags/${id}`);
+                   addToast('Etiqueta eliminada', { type: 'success' });
+                   loadTagsAdmin();
+                 } catch (err) {
+                   addToast('Error eliminando etiqueta', { type: 'error' });
+                 }
+               };
+
                const handleSaveCourse = async (e) => {
                  e.preventDefault();
                  try {
+                   const payload = {
+                     ...courseForm,
+                     price: courseForm.price !== '' ? courseForm.price : 0,
+                     capacityLimit: courseForm.capacityLimit !== '' ? Number(courseForm.capacityLimit) : null,
+                   };
                    if (isEditing && editingCourseId) {
-                     await api.put(`/admin/courses/${editingCourseId}`, courseForm);
-                     alert('Course updated successfully!');
+                     await api.put(`/admin/courses/${editingCourseId}`, payload);
+                     addToast('Curso actualizado', { type: 'success' });
                    } else {
-                     await api.post('/admin/courses', courseForm);
-                     alert('Course created successfully!');
+                     await api.post('/admin/courses', payload);
+                     addToast('Curso creado', { type: 'success' });
                    }
 
                    // reset form
-                   setCourseForm({ title: '', description: '', price: '' });
+                   setCourseForm({ title: '', description: '', price: '', status: 'PUBLISHED', enrollmentType: 'OPEN', capacityLimit: '', certificateTemplate: '', categoryIds: [], tagIds: [], prerequisiteCourseIds: [] });
                    setShowCourseForm(false);
                    setIsEditing(false);
                    setEditingCourseId(null);
                    loadCourses();
                  } catch (err) {
-                   alert(err.response?.data?.error || (isEditing ? 'Failed to update course' : 'Failed to create course'));
+                   addToast(err.response?.data?.error || (isEditing ? 'Failed to update course' : 'Failed to create course'), { type: 'error' });
                  }
                };
 
@@ -345,9 +507,19 @@
                const handleEditCourseClick = (course) => {
                  setIsEditing(true);
                  setEditingCourseId(course.id);
-                 setCourseForm({ title: course.title || '', description: course.description || '', price: course.price || '' });
+                 setCourseForm({
+                   title: course.title || '',
+                   description: course.description || '',
+                   price: course.price || '',
+                   status: course.status || 'PUBLISHED',
+                   enrollmentType: course.enrollmentType || 'OPEN',
+                   capacityLimit: course.capacityLimit || '',
+                   certificateTemplate: course.certificateTemplate || '',
+                   categoryIds: [],
+                   tagIds: [],
+                   prerequisiteCourseIds: []
+                 });
                  setShowCourseForm(true);
-                 // scroll to form or focus if needed
                  window.scrollTo({ top: 0, behavior: 'smooth' });
                };
 
@@ -662,6 +834,20 @@
                          >
                            Gestión Roles
                          </button>
+
+                         <button
+                           className={`admin-menu-item ${selectedMenu === 'modulos' ? 'active' : ''}`}
+                           onClick={() => setSelectedMenu('modulos')}
+                         >
+                           Módulos
+                         </button>
+
+                         <button
+                           className={`admin-menu-item ${selectedMenu === 'categorias' ? 'active' : ''}`}
+                           onClick={() => setSelectedMenu('categorias')}
+                         >
+                           Categorías/Tags
+                         </button>
                        </nav>
                      </aside>
 
@@ -699,9 +885,83 @@
                                  onChange={(e) => setCourseForm({ ...courseForm, price: e.target.value })}
                                  required
                                />
+                               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                                 <div style={{ flex: 1, minWidth: 150 }}>
+                                   <label style={{ display: 'block', marginBottom: 4, fontWeight: 600, fontSize: 13 }}>Estado</label>
+                                   <select value={courseForm.status} onChange={(e) => setCourseForm({ ...courseForm, status: e.target.value })} className="role-select" style={{ width: '100%' }}>
+                                     <option value="DRAFT">Borrador (DRAFT)</option>
+                                     <option value="PUBLISHED">Publicado (PUBLISHED)</option>
+                                     <option value="ARCHIVED">Archivado (ARCHIVED)</option>
+                                   </select>
+                                 </div>
+                                 <div style={{ flex: 1, minWidth: 150 }}>
+                                   <label style={{ display: 'block', marginBottom: 4, fontWeight: 600, fontSize: 13 }}>Tipo de matrícula</label>
+                                   <select value={courseForm.enrollmentType} onChange={(e) => setCourseForm({ ...courseForm, enrollmentType: e.target.value })} className="role-select" style={{ width: '100%' }}>
+                                     <option value="OPEN">Abierto (OPEN)</option>
+                                     <option value="INVITE_ONLY">Solo invitados (INVITE_ONLY)</option>
+                                     <option value="PAID">De pago (PAID)</option>
+                                   </select>
+                                 </div>
+                                 <div style={{ flex: 1, minWidth: 120 }}>
+                                   <label style={{ display: 'block', marginBottom: 4, fontWeight: 600, fontSize: 13 }}>Capacidad (plazas)</label>
+                                   <input
+                                     type="number"
+                                     placeholder="Sin límite"
+                                     value={courseForm.capacityLimit}
+                                     onChange={(e) => setCourseForm({ ...courseForm, capacityLimit: e.target.value })}
+                                     style={{ width: '100%', padding: '8px 12px', border: '1px solid #ddd', borderRadius: 6 }}
+                                   />
+                                 </div>
+                               </div>
+                               <input
+                                 type="text"
+                                 placeholder="Plantilla de certificado (URL o texto) — opcional"
+                                 value={courseForm.certificateTemplate}
+                                 onChange={(e) => setCourseForm({ ...courseForm, certificateTemplate: e.target.value })}
+                               />
+                               {allCategories.length > 0 && (
+                                 <div>
+                                   <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 13 }}>Categorías</label>
+                                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                                     {allCategories.map(cat => (
+                                       <label key={cat.id} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13 }}>
+                                         <input
+                                           type="checkbox"
+                                           checked={courseForm.categoryIds.includes(cat.id)}
+                                           onChange={(e) => {
+                                             if (e.target.checked) setCourseForm({ ...courseForm, categoryIds: [...courseForm.categoryIds, cat.id] });
+                                             else setCourseForm({ ...courseForm, categoryIds: courseForm.categoryIds.filter(x => x !== cat.id) });
+                                           }}
+                                         />
+                                         {cat.name}
+                                       </label>
+                                     ))}
+                                   </div>
+                                 </div>
+                               )}
+                               {allTags.length > 0 && (
+                                 <div>
+                                   <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: 13 }}>Etiquetas</label>
+                                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                                     {allTags.map(tag => (
+                                       <label key={tag.id} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13 }}>
+                                         <input
+                                           type="checkbox"
+                                           checked={courseForm.tagIds.includes(tag.id)}
+                                           onChange={(e) => {
+                                             if (e.target.checked) setCourseForm({ ...courseForm, tagIds: [...courseForm.tagIds, tag.id] });
+                                             else setCourseForm({ ...courseForm, tagIds: courseForm.tagIds.filter(x => x !== tag.id) });
+                                           }}
+                                         />
+                                         {tag.name}
+                                       </label>
+                                     ))}
+                                   </div>
+                                 </div>
+                               )}
                                <div style={{ display: 'flex', gap: 10 }}>
                                  <button type="submit" className="btn-submit">{isEditing ? 'Update Course' : 'Create Course'}</button>
-                                 <button type="button" className="btn-cancel" onClick={() => { setShowCourseForm(false); setIsEditing(false); setEditingCourseId(null); setCourseForm({ title: '', description: '', price: '' }); }}>Cancel</button>
+                                 <button type="button" className="btn-cancel" onClick={() => { setShowCourseForm(false); setIsEditing(false); setEditingCourseId(null); setCourseForm({ title: '', description: '', price: '', status: 'PUBLISHED', enrollmentType: 'OPEN', capacityLimit: '', certificateTemplate: '', categoryIds: [], tagIds: [], prerequisiteCourseIds: [] }); }}>Cancel</button>
                                </div>
                              </form>
                            )}
@@ -713,13 +973,36 @@
                                    <div className="course-title-row">
                                      <h3>{course.title}</h3>
                                      { (course.price === 0 || course.price === '0') && <span className="badge-free">Free</span> }
+                                     { course.status && <span className={`badge-status badge-${(course.status||'').toLowerCase()}`}>{course.status}</span> }
                                    </div>
                                    <p>{course.description}</p>
                                    <span className="meta">
                                      { (course.price === 0 || course.price === '0') ? 'Free' : `$${course.price}`} • {course.lessonCount} lessons
+                                     { course.enrollmentType && course.enrollmentType !== 'OPEN' && <span style={{ marginLeft: 6 }}>• {course.enrollmentType}</span> }
                                    </span>
                                  </div>
                                  <div className="course-actions">
+                                   {/* Quick status buttons */}
+                                   <div style={{ display: 'flex', gap: 4, marginBottom: 4 }}>
+                                     {course.status !== 'PUBLISHED' && (
+                                       <button className="btn-submit" style={{ padding: '4px 10px', fontSize: 12 }}
+                                         onClick={async () => { await api.put(`/admin/courses/${course.id}/status`, { status: 'PUBLISHED' }); loadCourses(); }}>
+                                         Publicar
+                                       </button>
+                                     )}
+                                     {course.status !== 'DRAFT' && (
+                                       <button className="btn-cancel" style={{ padding: '4px 10px', fontSize: 12 }}
+                                         onClick={async () => { await api.put(`/admin/courses/${course.id}/status`, { status: 'DRAFT' }); loadCourses(); }}>
+                                         Borrador
+                                       </button>
+                                     )}
+                                     {course.status !== 'ARCHIVED' && (
+                                       <button className="btn-delete" style={{ padding: '4px 10px', fontSize: 12 }}
+                                         onClick={async () => { if(window.confirm('¿Archivar este curso?')) { await api.put(`/admin/courses/${course.id}/status`, { status: 'ARCHIVED' }); loadCourses(); } }}>
+                                         Archivar
+                                       </button>
+                                     )}
+                                   </div>
                                    {/* Nuevo: botón para ver detalle del curso directamente */}
                                    <button
                                      onClick={() => openCourseDetail(course.id)}
@@ -1129,6 +1412,288 @@
                                  />
                                  <button className="btn-submit" onClick={handleIssueCertificate}>Emitir Certificado</button>
                                </div>
+                             </div>
+                           </div>
+                         </div>
+                       )}
+
+                       {/* ── Módulos ─────────────────────────────── */}
+                       {selectedMenu === 'modulos' && (
+                         <div className="admin-section">
+                           <div className="section-header">
+                             <h2>Módulos</h2>
+                           </div>
+
+                           {/* Course selector */}
+                           <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                             <div style={{ flex: 1, minWidth: 200 }}>
+                               <label style={{ display: 'block', marginBottom: 4, fontWeight: 600, fontSize: 13 }}>Seleccionar curso</label>
+                               <select
+                                 className="role-select"
+                                 style={{ width: '100%' }}
+                                 value={modulesCourseId}
+                                 onChange={(e) => {
+                                   setModulesCourseId(e.target.value);
+                                   if (e.target.value) loadModules(e.target.value);
+                                   else setModules([]);
+                                 }}
+                               >
+                                 <option value="">— Elige un curso —</option>
+                                 {courses.map(c => (
+                                   <option key={c.id} value={c.id}>{c.title}</option>
+                                 ))}
+                               </select>
+                             </div>
+                             {modulesCourseId && (
+                               <button
+                                 className="btn-create"
+                                 onClick={() => {
+                                   setIsEditingModule(false);
+                                   setEditingModuleId(null);
+                                   setModuleForm({ title: '', description: '', moduleOrder: modules.length + 1 });
+                                   setShowModuleForm(true);
+                                 }}
+                               >
+                                 + Nuevo Módulo
+                               </button>
+                             )}
+                           </div>
+
+                           {/* Module form */}
+                           {showModuleForm && modulesCourseId && (
+                             <form onSubmit={handleSaveModule} className="admin-form" style={{ marginBottom: 20 }}>
+                               <h3 style={{ margin: '0 0 12px 0' }}>{isEditingModule ? 'Editar Módulo' : 'Nuevo Módulo'}</h3>
+                               <input
+                                 type="text"
+                                 placeholder="Título del módulo"
+                                 value={moduleForm.title}
+                                 onChange={(e) => setModuleForm({ ...moduleForm, title: e.target.value })}
+                                 required
+                               />
+                               <textarea
+                                 placeholder="Descripción (opcional)"
+                                 value={moduleForm.description}
+                                 onChange={(e) => setModuleForm({ ...moduleForm, description: e.target.value })}
+                                 rows={2}
+                               />
+                               <input
+                                 type="number"
+                                 placeholder="Orden"
+                                 value={moduleForm.moduleOrder}
+                                 onChange={(e) => setModuleForm({ ...moduleForm, moduleOrder: e.target.value })}
+                                 required
+                                 min={1}
+                               />
+                               <div style={{ display: 'flex', gap: 10 }}>
+                                 <button type="submit" className="btn-submit">{isEditingModule ? 'Actualizar' : 'Crear Módulo'}</button>
+                                 <button type="button" className="btn-cancel" onClick={() => { setShowModuleForm(false); setIsEditingModule(false); setEditingModuleId(null); setModuleForm({ title: '', description: '', moduleOrder: 1 }); }}>Cancelar</button>
+                               </div>
+                             </form>
+                           )}
+
+                           {/* Modules list */}
+                           {modulesCourseId ? (
+                             modules.length === 0 ? (
+                               <div style={{ padding: 20, color: '#666' }}>No hay módulos en este curso. Crea uno para organizar las lecciones.</div>
+                             ) : (
+                               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                                 {modules.map((mod) => (
+                                   <div key={mod.id} className="admin-course-card">
+                                     <div className="course-info">
+                                       <div className="course-title-row">
+                                         <h3>#{mod.moduleOrder} {mod.title}</h3>
+                                       </div>
+                                       {mod.description && <p>{mod.description}</p>}
+                                       <span className="meta">{mod.lessons ? mod.lessons.length : 0} lecciones</span>
+                                     </div>
+                                     <div className="course-actions">
+                                       <button
+                                         className="btn-edit"
+                                         onClick={() => {
+                                           setIsEditingModule(true);
+                                           setEditingModuleId(mod.id);
+                                           setModuleForm({ title: mod.title || '', description: mod.description || '', moduleOrder: mod.moduleOrder || 1 });
+                                           setShowModuleForm(true);
+                                           window.scrollTo({ top: 0, behavior: 'smooth' });
+                                         }}
+                                       >
+                                         Editar
+                                       </button>
+                                       <button className="btn-delete" onClick={() => handleDeleteModule(mod.id)}>
+                                         Eliminar
+                                       </button>
+                                     </div>
+                                   </div>
+                                 ))}
+                               </div>
+                             )
+                           ) : (
+                             <div style={{ padding: 20, color: '#aaa' }}>Selecciona un curso para ver sus módulos.</div>
+                           )}
+                         </div>
+                       )}
+
+                       {/* ── Categorías/Tags ─────────────────────────────── */}
+                       {selectedMenu === 'categorias' && (
+                         <div className="admin-section">
+                           <div className="section-header">
+                             <h2>Categorías y Etiquetas</h2>
+                           </div>
+
+                           {/* ─ Categories ─ */}
+                           <div style={{ marginBottom: 36 }}>
+                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                               <h3 style={{ margin: 0 }}>Categorías</h3>
+                               <button
+                                 className="btn-create"
+                                 onClick={() => {
+                                   setIsEditingCategory(false);
+                                   setEditingCategoryId(null);
+                                   setCategoryForm({ name: '', slug: '', description: '' });
+                                   setShowCategoryForm(!showCategoryForm);
+                                 }}
+                               >
+                                 {showCategoryForm ? 'Cancelar' : '+ Nueva Categoría'}
+                               </button>
+                             </div>
+
+                             {showCategoryForm && (
+                               <form onSubmit={handleSaveCategory} className="admin-form" style={{ marginBottom: 16 }}>
+                                 <input
+                                   type="text"
+                                   placeholder="Nombre de la categoría"
+                                   value={categoryForm.name}
+                                   onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })}
+                                   required
+                                 />
+                                 <input
+                                   type="text"
+                                   placeholder="Slug (ej: desarrollo-web)"
+                                   value={categoryForm.slug}
+                                   onChange={(e) => setCategoryForm({ ...categoryForm, slug: e.target.value })}
+                                   required
+                                 />
+                                 <input
+                                   type="text"
+                                   placeholder="Descripción (opcional)"
+                                   value={categoryForm.description}
+                                   onChange={(e) => setCategoryForm({ ...categoryForm, description: e.target.value })}
+                                 />
+                                 <div style={{ display: 'flex', gap: 10 }}>
+                                   <button type="submit" className="btn-submit">{isEditingCategory ? 'Actualizar' : 'Crear Categoría'}</button>
+                                   <button type="button" className="btn-cancel" onClick={() => { setShowCategoryForm(false); setIsEditingCategory(false); setEditingCategoryId(null); setCategoryForm({ name: '', slug: '', description: '' }); }}>Cancelar</button>
+                                 </div>
+                               </form>
+                             )}
+
+                             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                               {allCategories.length === 0 ? (
+                                 <div style={{ padding: '12px 0', color: '#999' }}>No hay categorías creadas todavía.</div>
+                               ) : (
+                                 allCategories.map((cat) => (
+                                   <div key={cat.id} className="admin-user-card">
+                                     <div className="user-info">
+                                       <h3 style={{ marginBottom: 2 }}>{cat.name}</h3>
+                                       <p style={{ margin: 0, fontSize: 13 }}>
+                                         <span className="meta">slug: {cat.slug}</span>
+                                         {cat.description && <span> — {cat.description}</span>}
+                                       </p>
+                                     </div>
+                                     <div className="user-actions">
+                                       <button
+                                         className="btn-edit"
+                                         onClick={() => {
+                                           setIsEditingCategory(true);
+                                           setEditingCategoryId(cat.id);
+                                           setCategoryForm({ name: cat.name || '', slug: cat.slug || '', description: cat.description || '' });
+                                           setShowCategoryForm(true);
+                                           window.scrollTo({ top: 0, behavior: 'smooth' });
+                                         }}
+                                       >
+                                         Editar
+                                       </button>
+                                       <button className="btn-delete" onClick={() => handleDeleteCategory(cat.id)}>
+                                         Eliminar
+                                       </button>
+                                     </div>
+                                   </div>
+                                 ))
+                               )}
+                             </div>
+                           </div>
+
+                           {/* ─ Tags ─ */}
+                           <div>
+                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                               <h3 style={{ margin: 0 }}>Etiquetas (Tags)</h3>
+                               <button
+                                 className="btn-create"
+                                 onClick={() => {
+                                   setIsEditingTag(false);
+                                   setEditingTagId(null);
+                                   setTagForm({ name: '', slug: '' });
+                                   setShowTagForm(!showTagForm);
+                                 }}
+                               >
+                                 {showTagForm ? 'Cancelar' : '+ Nueva Etiqueta'}
+                               </button>
+                             </div>
+
+                             {showTagForm && (
+                               <form onSubmit={handleSaveTag} className="admin-form" style={{ marginBottom: 16 }}>
+                                 <input
+                                   type="text"
+                                   placeholder="Nombre de la etiqueta"
+                                   value={tagForm.name}
+                                   onChange={(e) => setTagForm({ ...tagForm, name: e.target.value })}
+                                   required
+                                 />
+                                 <input
+                                   type="text"
+                                   placeholder="Slug (ej: javascript)"
+                                   value={tagForm.slug}
+                                   onChange={(e) => setTagForm({ ...tagForm, slug: e.target.value })}
+                                   required
+                                 />
+                                 <div style={{ display: 'flex', gap: 10 }}>
+                                   <button type="submit" className="btn-submit">{isEditingTag ? 'Actualizar' : 'Crear Etiqueta'}</button>
+                                   <button type="button" className="btn-cancel" onClick={() => { setShowTagForm(false); setIsEditingTag(false); setEditingTagId(null); setTagForm({ name: '', slug: '' }); }}>Cancelar</button>
+                                 </div>
+                               </form>
+                             )}
+
+                             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                               {allTags.length === 0 ? (
+                                 <div style={{ padding: '12px 0', color: '#999' }}>No hay etiquetas creadas todavía.</div>
+                               ) : (
+                                 allTags.map((tag) => (
+                                   <div key={tag.id} className="admin-user-card">
+                                     <div className="user-info">
+                                       <h3 style={{ marginBottom: 2 }}>{tag.name}</h3>
+                                       <p style={{ margin: 0, fontSize: 13 }}>
+                                         <span className="meta">slug: {tag.slug}</span>
+                                       </p>
+                                     </div>
+                                     <div className="user-actions">
+                                       <button
+                                         className="btn-edit"
+                                         onClick={() => {
+                                           setIsEditingTag(true);
+                                           setEditingTagId(tag.id);
+                                           setTagForm({ name: tag.name || '', slug: tag.slug || '' });
+                                           setShowTagForm(true);
+                                           window.scrollTo({ top: 0, behavior: 'smooth' });
+                                         }}
+                                       >
+                                         Editar
+                                       </button>
+                                       <button className="btn-delete" onClick={() => handleDeleteTag(tag.id)}>
+                                         Eliminar
+                                       </button>
+                                     </div>
+                                   </div>
+                                 ))
+                               )}
                              </div>
                            </div>
                          </div>

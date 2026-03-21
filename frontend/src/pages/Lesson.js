@@ -113,7 +113,17 @@ function Lesson() {
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       const response = await api.get(`/lessons/${id}`, { headers });
       console.debug('loadLesson: response.data.completed =', response.data?.completed);
-      setLesson(response.data);
+      const lessonData = response.data;
+
+      // Redirect if drip-locked
+      if (lessonData.available === false) {
+        navigate(`/course/${lessonData.courseId}`, {
+          state: { dripMessage: 'Esta lección aún no está disponible.' }
+        });
+        return;
+      }
+
+      setLesson(lessonData);
       // Usar streaming endpoint para VIDEO (soporta Range requests / Plyr)
       setVideoSrc(streamUrl);
     } catch (err) {
@@ -233,6 +243,16 @@ function Lesson() {
               className="btn-download"
             >
               Download PDF
+            </a>
+          </div>
+        ) : lesson.lessonType === 'AUDIO' ? (
+          <div className="audio-container">
+            <audio controls style={{ width: '100%' }} onEnded={markCompleted}>
+              <source src={streamUrl} />
+              Tu navegador no soporta la reproducción de audio.
+            </audio>
+            <a href={streamUrl} target="_blank" rel="noopener noreferrer" className="btn-download">
+              Descargar audio
             </a>
           </div>
         ) : null}

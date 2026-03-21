@@ -32,6 +32,18 @@ public class Lesson {
     @Column(name = "duration_seconds")
     private Integer durationSeconds;
     
+    @Column(name = "module_id")
+    private Long moduleId;
+    
+    @Column(name = "release_after_days")
+    private Integer releaseAfterDays;
+    
+    @Column(name = "available_from")
+    private LocalDateTime availableFrom;
+    
+    @Transient
+    private boolean available = true;
+    
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
     
@@ -39,7 +51,7 @@ public class Lesson {
     private LocalDateTime updatedAt = LocalDateTime.now();
     
     public enum LessonType {
-        VIDEO, PDF
+        VIDEO, PDF, AUDIO
     }
     
     @PreUpdate
