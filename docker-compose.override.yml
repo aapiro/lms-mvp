@@ -1,0 +1,74 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# docker-compose.override.yml  —  MODO DESARROLLO
+#
+# Se fusiona automáticamente con docker-compose.yml al ejecutar:
+#   docker-compose up --build -d
+#
+# Diferencias respecto a producción:
+#  • frontend → Dockerfile.dev (Node 18) + npm start con hot reload
+#  • backend  → Dockerfile.dev (Maven)   + mvn spring-boot:run con DevTools
+#  • El código fuente se monta como volumen; los cambios se reflejan sin rebuild.
+#
+# Solo necesitas rebuild de imagen si cambias:
+#   - package.json  (frontend)
+#   - pom.xml       (backend)
+#   - Dockerfile.dev
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── FRONTEND ────────────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev       # Node 18 + npm install pre-cacheado
+    volumes:
+      - ./frontend/src:/app/src:delegated        # cambios en src → hot reload
+      - ./frontend/public:/app/public:delegated  # cambios en public → hot reload
+      # node_modules NO se monta; se usa el de la imagen (evita conflictos de SO)
+    working_dir: /app
+    # PORT=80 → React dev server escucha en el mismo puerto que nginx en prod
+    # Así reutilizamos el mapeo 3000:80 del docker-compose.yml base sin conflicto
+    command: sh -c "PORT=80 npm start"
+    environment:
+      - CHOKIDAR_USEPOLLING=true          # necesario en macOS para detectar cambios
+      - REACT_APP_API_URL=http://localhost:8080/api
+
+  # ── MINIO-INIT ───────────────────────────────────────────────────────────────
+  # Sube los archivos de media demo al bucket en cada arranque.
+  # Solo en desarrollo: los datos demo no pertenecen al compose de producción.
+  minio-init:
+    image: minio/mc:latest
+    container_name: lms-minio-init
+    entrypoint: >
+      sh -c "
+        echo 'Esperando MinIO...' &&
+        until mc alias set myminio http://lms-minio:9000 minioadmin minioadmin123 --api S3v4 2>/dev/null; do
+          sleep 2;
+        done &&
+        mc mb --ignore-existing myminio/lms-content &&
+        mc cp /media/sample-mp4-files-sample_960x540.mp4 myminio/lms-content/demo/sample.mp4 &&
+        mc cp /media/sample-pdf-file.pdf myminio/lms-content/demo/sample.pdf &&
+        echo 'Archivos de media subidos correctamente a MinIO.'
+      "
+    volumes:
+      - ./media-resources:/media:ro
+    depends_on:
+      minio:
+        condition: service_healthy
+    networks:
+      - lms-network
+    restart: on-failure
+
+  # ── BACKEND ─────────────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev         # Maven 3.9 + dependencias pre-cacheadas
+    volumes:
+      - ./backend/src:/app/src:delegated  # cambios en src → Spring DevTools reinicia
+      - ~/.m2:/root/.m2:delegated         # cache Maven en el host (acelera arranques)
+    working_dir: /app
+    command: mvn -DskipTests spring-boot:run
+    environment:
+      SPRING_PROFILES_ACTIVE: dev

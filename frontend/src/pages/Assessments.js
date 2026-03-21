@@ -318,7 +318,7 @@ const TakeAssessmentModal = ({ assessment, onClose, onComplete }) => {
   };
 
   const nextQuestion = () => {
-    if (currentQuestion < (assessmentData?.questions?.length || assessment.questions.length) - 1) {
+    if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
     }
   };
@@ -341,6 +341,10 @@ const TakeAssessmentModal = ({ assessment, onClose, onComplete }) => {
       console.error('Error submitting assessment:', err);
     }
   };
+
+  // Usar assessmentData (cargado con preguntas) con fallback al prop original
+  // Declarado aquí para que esté disponible en funciones y en el render
+  const questions = assessmentData?.questions || assessment?.questions || [];
 
   if (submitted) {
     return (
@@ -366,17 +370,27 @@ const TakeAssessmentModal = ({ assessment, onClose, onComplete }) => {
     );
   }
 
-  const questions = assessmentData?.questions || assessment.questions || [];
-  if (!questions || questions.length === 0) return <div>Cargando...</div>;
 
   const question = questions[currentQuestion];
+
+  if (!question) {
+    return (
+      <div className="modal-overlay">
+        <div className="modal-content">
+          <h3>Sin preguntas</h3>
+          <p>No se encontraron preguntas para esta evaluación.</p>
+          <button onClick={onClose} className="btn btn-secondary">Cerrar</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="modal-overlay">
       <div className="modal-content assessment-modal">
         <div className="assessment-header">
           <h3>{assessment.title}</h3>
-          <span>Pregunta {currentQuestion + 1} de {assessment.questions.length}</span>
+          <span>Pregunta {currentQuestion + 1} de {questions.length}</span>
         </div>
 
         <div className="question-content">
@@ -420,7 +434,7 @@ const TakeAssessmentModal = ({ assessment, onClose, onComplete }) => {
             Anterior
           </button>
 
-          {currentQuestion < assessment.questions.length - 1 ? (
+          {currentQuestion < questions.length - 1 ? (
             <button onClick={nextQuestion} className="btn btn-primary">
               Siguiente
             </button>

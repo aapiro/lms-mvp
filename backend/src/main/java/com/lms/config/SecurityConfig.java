@@ -31,6 +31,12 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .headers(headers -> headers
+                // Permite que el iframe en la misma página cargue el contenido del stream
+                // (PDF/video). DENY bloquea cualquier iframe; SAMEORIGIN lo permite
+                // solo si el padre y el iframe están en el mismo origen.
+                .frameOptions(frame -> frame.sameOrigin())
+            )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/payments/webhook").permitAll()

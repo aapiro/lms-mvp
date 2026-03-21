@@ -1,0 +1,11 @@
+FROM maven:3.9-eclipse-temurin-17
+
+WORKDIR /app
+
+# Pre-descarga dependencias Maven (se cachean en la imagen; solo rebuild si cambia pom.xml)
+COPY pom.xml ./
+RUN mvn dependency:go-offline -q
+
+# El código fuente se monta como volumen en tiempo de ejecución
+# command: mvn -DskipTests spring-boot:run   (definido en docker-compose.override.yml)
+

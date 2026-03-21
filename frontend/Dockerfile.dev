@@ -1,0 +1,11 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Pre-instala dependencias (se cachean en la imagen; solo rebuild si cambia package.json)
+COPY package*.json ./
+RUN npm install
+
+# El código fuente se monta como volumen en tiempo de ejecución
+# command: PORT=80 npm start   (definido en docker-compose.override.yml)
+

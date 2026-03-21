@@ -100,6 +100,10 @@ function Lesson() {
     }
   };
 
+  // Streaming endpoint: proxied por nginx (prod) y por CRA proxy (dev)
+  // Evita presigned URLs con host.docker.internal que no resuelve en el browser
+  const streamUrl = `/api/lessons/${id}/stream`;
+
   const loadLesson = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -108,8 +112,8 @@ function Lesson() {
       const response = await api.get(`/lessons/${id}`, { headers });
       console.debug('loadLesson: response.data.completed =', response.data?.completed);
       setLesson(response.data);
-      // prefer backend streaming endpoint which supports Range and avoids presigned URL issues
-      setVideoSrc(`/api/lessons/${id}/stream`);
+      // Usar streaming endpoint para VIDEO (soporta Range requests / Plyr)
+      setVideoSrc(streamUrl);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to load lesson');
     } finally {
@@ -168,8 +172,7 @@ function Lesson() {
   };
 
   const handleDownload = () => {
-    if (!lesson || !lesson.fileUrl) return;
-    window.open(lesson.fileUrl, '_blank', 'noopener');
+    window.open(streamUrl, '_blank', 'noopener');
   };
 
   if (loading) return <div className="loading">Loading lesson...</div>;
@@ -189,9 +192,10 @@ function Lesson() {
         {lesson.lessonType === 'VIDEO' ? (
           <div className="video-container">
             <video controls width="100%" onEnded={markCompleted} crossOrigin="anonymous">
-              <source src={videoSrc || lesson.fileUrl} type={ (() => {
-                // guess mime from extension for the source type attribute
-                const m = lesson.fileUrl.match(/\.([a-zA-Z0-9]+)(?:\?|$)/);
+              <source src={videoSrc || streamUrl} type={ (() => {
+                // Detectar mime desde fileUrl (presigned) o del streamUrl como fallback
+                const url = lesson.fileUrl || streamUrl;
+                const m = url.match(/\.([a-zA-Z0-9]+)(?:\?|$)/);
                 const ext = m ? m[1].toLowerCase() : '';
                 const map = { mp4: 'video/mp4', m4v: 'video/x-m4v', webm: 'video/webm', ogg: 'video/ogg', mov: 'video/quicktime' };
                 return map[ext] || 'video/mp4';
@@ -215,13 +219,13 @@ function Lesson() {
         ) : lesson.lessonType === 'PDF' ? (
           <div className="pdf-container">
             <iframe 
-              src={lesson.fileUrl} 
+              src={streamUrl}
               width="100%" 
               height="800px"
               title={lesson.title}
             />
             <a 
-              href={lesson.fileUrl} 
+              href={streamUrl}
               target="_blank" 
               rel="noopener noreferrer"
               className="btn-download"
