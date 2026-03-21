@@ -14,7 +14,6 @@ function AdminDashboard() {
   const [to, setTo] = useState(() => new Date().toISOString().slice(0,10));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [debugInfo, setDebugInfo] = useState({});
 
   const loadSummary = async () => {
     setError(null);
@@ -25,23 +24,19 @@ function AdminDashboard() {
       } catch (e) {
         const status = e.response?.status;
         if (status === 401 || status === 403) {
-          // fallback to public endpoint
           res = await api.get('/admin/metrics/public-summary');
         } else throw e;
       }
       setSummary(res.data);
-      setDebugInfo((d) => ({ ...d, lastSummaryFetch: new Date().toISOString(), summaryStatus: 'ok' }));
     } catch (e) {
       console.error('loadSummary error', e);
       setError('Error cargando summary: ' + (e.response?.status ? `${e.response.status} ${e.response.statusText}` : e.message));
-      setDebugInfo((d) => ({ ...d, lastSummaryFetch: new Date().toISOString(), summaryStatus: 'error', summaryError: '' + (e.response?.data || e.message) }));
     }
   };
 
   const loadSeries = async () => {
     setLoading(true);
     try {
-      // sales-timeseries is admin-protected; try and if 401/403 skip
       let res;
       try {
         res = await api.get(`/admin/metrics/sales-timeseries?from=${from}&to=${to}&interval=day`);
@@ -49,14 +44,11 @@ function AdminDashboard() {
         const status = e.response?.status;
         if (status === 401 || status === 403) {
           setSeries([]);
-          setDebugInfo((d) => ({ ...d, seriesStatus: 'forbidden' }));
           return;
         } else throw e;
       }
-      // normalize numeric fields
       const normalized = res.data.map(s => ({ ...s, revenueCents: Number(s.revenueCents), salesCount: Number(s.salesCount) }));
       setSeries(normalized);
-      setDebugInfo((d) => ({ ...d, lastSeriesFetch: new Date().toISOString(), seriesStatus: 'ok' }));
     } finally {
       setLoading(false);
     }
@@ -65,8 +57,6 @@ function AdminDashboard() {
   useEffect(() => {
     const boot = async () => {
       try {
-        // collect runtime debug info
-        setDebugInfo({ apiBase: api.defaults.baseURL, tokenPresent: !!localStorage.getItem('token') });
         await loadSummary();
         await loadSeries();
       } catch (e) {
@@ -92,15 +82,6 @@ function AdminDashboard() {
   return (
     <div className="admin-dashboard">
       {error && <div style={{ padding: 12, background: '#fee', color: '#900', borderRadius: 6 }}>{error}</div>}
-      {/* DEBUG INFO */}
-      <div style={{ marginTop: 10, padding: 8, background: '#f3f4f6', borderRadius: 6 }}>
-        <strong>Debug:</strong>
-        <div>API base: <code>{api.defaults.baseURL}</code></div>
-        <div>Token present: <code>{!!localStorage.getItem('token') ? 'yes' : 'no'}</code></div>
-        <div>Summary status: <code>{debugInfo.summaryStatus || '-'}</code></div>
-        <div>Series status: <code>{debugInfo.seriesStatus || '-'}</code></div>
-        {debugInfo.summaryError && <pre style={{ whiteSpace: 'pre-wrap', color: '#900' }}>{debugInfo.summaryError}</pre>}
-      </div>
 
       <div className="dashboard-header">
         <h2>Dashboard</h2>
@@ -154,11 +135,6 @@ function AdminDashboard() {
         )}
       </div>
 
-      {/* RAW JSON (debug) */}
-      <div style={{ marginTop: 12 }}>
-        <h4>Raw summary</h4>
-        <pre style={{ whiteSpace: 'pre-wrap', maxHeight: 200, overflow: 'auto', background: '#fff', padding: 8 }}>{JSON.stringify(summary, null, 2)}</pre>
-      </div>
     </div>
   );
 }
