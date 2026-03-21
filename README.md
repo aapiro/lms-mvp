@@ -102,6 +102,16 @@ Esto levantará:
 - **MinIO** en `localhost:9000` (consola en `localhost:9001`)
 - **Backend API** en `localhost:8080`
 - **Frontend** en `localhost:3000`
+- **minio-init** *(servicio de inicialización, se ejecuta una vez y termina)*
+
+> **📁 Archivos de media demo**
+> El servicio `minio-init` sube automáticamente los archivos de prueba al bucket de MinIO en cada arranque. Los archivos deben existir en:
+> ```
+> media-resources/
+> ├── sample-mp4-files-sample_960x540.mp4   ← video de ejemplo
+> └── sample-pdf-file.pdf                   ← PDF de ejemplo
+> ```
+> No necesitas hacer nada manualmente. Las migraciones de Flyway (V14, V15) ya apuntan las lecciones demo a `demo/sample.mp4` y `demo/sample.pdf` en MinIO.
 
 ### 4. Acceder a la aplicacin
 
