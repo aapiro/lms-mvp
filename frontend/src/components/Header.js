@@ -9,7 +9,7 @@ function Header() {
   return (
     <header className="header">
       <div className="header-content">
-        <h1>LMS Platform</h1>
+        <Link to="/" className="header-logo">LMS Platform</Link>
         <div className="header-actions">
           {user ? (
             <>

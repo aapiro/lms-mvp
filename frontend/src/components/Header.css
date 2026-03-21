@@ -19,6 +19,18 @@
   font-size: 28px;
 }
 
+.header-logo {
+  margin: 0;
+  color: #333;
+  font-size: 28px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.header-logo:hover {
+  color: #667eea;
+}
+
 .header-actions {
   display: flex;
   gap: 15px;
