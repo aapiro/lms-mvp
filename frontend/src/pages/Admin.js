@@ -434,17 +434,17 @@
                        <h3>Administración</h3>
                        <nav className="admin-nav">
                          <button
-                           className={`admin-menu-item ${selectedMenu === 'cursos' ? 'active' : ''}`}
-                           onClick={() => setSelectedMenu('cursos')}
-                         >
-                           Cursos
-                         </button>
-
-                         <button
                            className={`admin-menu-item ${selectedMenu === 'dashboard' ? 'active' : ''}`}
                            onClick={() => setSelectedMenu('dashboard')}
                          >
                            Dashboard
+                         </button>
+
+                         <button
+                           className={`admin-menu-item ${selectedMenu === 'cursos' ? 'active' : ''}`}
+                           onClick={() => setSelectedMenu('cursos')}
+                         >
+                           Cursos
                          </button>
 
                          <button
