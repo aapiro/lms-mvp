@@ -45,6 +45,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/assessments/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/assessments/*/submissions/*").permitAll() // Permitir POST a submissions sin autenticación
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/users/me", "/api/users/me/**").authenticated()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

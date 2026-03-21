@@ -69,6 +69,36 @@
                const [auditSize] = useState(20);
                const [loadingAudit, setLoadingAudit] = useState(false);
 
+               // ── Students ──────────────────────────────────────
+               const [students, setStudents] = useState([]);
+               const [studentPage, setStudentPage] = useState(0);
+               const [studentSearch, setStudentSearch] = useState('');
+               const [loadingStudents, setLoadingStudents] = useState(false);
+               const [showStudentDetail, setShowStudentDetail] = useState(false);
+               const [studentDetail, setStudentDetail] = useState(null);
+               const [showStudentProgress, setShowStudentProgress] = useState(false);
+               const [studentProgress, setStudentProgress] = useState([]);
+
+               // ── Instructors ───────────────────────────────────
+               const [instructors, setInstructors] = useState([]);
+               const [instructorPage, setInstructorPage] = useState(0);
+               const [instructorSearch, setInstructorSearch] = useState('');
+               const [loadingInstructors, setLoadingInstructors] = useState(false);
+               const [showInstructorDetail, setShowInstructorDetail] = useState(false);
+               const [instructorDetail, setInstructorDetail] = useState(null);
+
+               // ── Profile Edit ──────────────────────────────────
+               const [showProfileEdit, setShowProfileEdit] = useState(false);
+               const [profileEditUserId, setProfileEditUserId] = useState(null);
+               const [profileEditType, setProfileEditType] = useState('students');
+               const [profileForm, setProfileForm] = useState({ fullName: '', bio: '', avatarUrl: '' });
+
+               // ── Admin Management ──────────────────────────────
+               const [mgmtUserId, setMgmtUserId] = useState('');
+               const [mgmtNewRole, setMgmtNewRole] = useState('STUDENT');
+               const [certUserId, setCertUserId] = useState('');
+               const [certCourseId, setCertCourseId] = useState('');
+
                const { addToast } = useToast();
 
                const [hasAdminAccess, setHasAdminAccess] = useState(null);
@@ -105,6 +135,8 @@
                  if (selectedMenu === 'compras') {
                    loadPurchases();
                  }
+                 if (selectedMenu === 'students') loadStudents(0);
+                 if (selectedMenu === 'instructors') loadInstructors(0);
                }, [selectedMenu]);
 
                const loadUsers = async () => {
@@ -421,6 +453,126 @@
                  }
                };
 
+               // ── Students ──────────────────────────────────────
+               const loadStudents = async (page = 0) => {
+                 setLoadingStudents(true);
+                 try {
+                   const q = studentSearch ? `&search=${encodeURIComponent(studentSearch)}` : '';
+                   const res = await api.get(`/admin/students?page=${page}&size=20${q}`);
+                   setStudents(res.data.content || res.data);
+                   setStudentPage(page);
+                 } catch (err) {
+                   addToast('Error cargando estudiantes', { type: 'error' });
+                 } finally {
+                   setLoadingStudents(false);
+                 }
+               };
+
+               const openStudentDetail = async (id) => {
+                 try {
+                   const res = await api.get(`/admin/students/${id}`);
+                   setStudentDetail(res.data);
+                   setShowStudentDetail(true);
+                 } catch (err) {
+                   addToast('Error cargando detalle del estudiante', { type: 'error' });
+                 }
+               };
+
+               const openStudentProgress = async (id) => {
+                 try {
+                   const res = await api.get(`/admin/students/${id}/progress`);
+                   setStudentProgress(res.data);
+                   setShowStudentProgress(true);
+                 } catch (err) {
+                   addToast('Error cargando progreso', { type: 'error' });
+                 }
+               };
+
+               // ── Instructors ───────────────────────────────────
+               const loadInstructors = async (page = 0) => {
+                 setLoadingInstructors(true);
+                 try {
+                   const q = instructorSearch ? `&search=${encodeURIComponent(instructorSearch)}` : '';
+                   const res = await api.get(`/admin/instructors?page=${page}&size=20${q}`);
+                   setInstructors(res.data.content || res.data);
+                   setInstructorPage(page);
+                 } catch (err) {
+                   addToast('Error cargando instructores', { type: 'error' });
+                 } finally {
+                   setLoadingInstructors(false);
+                 }
+               };
+
+               const openInstructorDetail = async (id) => {
+                 try {
+                   const res = await api.get(`/admin/instructors/${id}`);
+                   setInstructorDetail(res.data);
+                   setShowInstructorDetail(true);
+                 } catch (err) {
+                   addToast('Error cargando detalle del instructor', { type: 'error' });
+                 }
+               };
+
+               // ── Profile Edit ──────────────────────────────────
+               const openProfileEdit = (user, type) => {
+                 setProfileEditUserId(user.id);
+                 setProfileEditType(type);
+                 setProfileForm({ fullName: user.fullName || '', bio: user.bio || '', avatarUrl: user.avatarUrl || '' });
+                 setShowProfileEdit(true);
+               };
+
+               const saveProfile = async () => {
+                 try {
+                   await api.put(`/admin/${profileEditType}/${profileEditUserId}/profile`, profileForm);
+                   addToast('Perfil actualizado', { type: 'success' });
+                   setShowProfileEdit(false);
+                   if (profileEditType === 'students') loadStudents(studentPage);
+                   else loadInstructors(instructorPage);
+                 } catch (err) {
+                   addToast('Error guardando perfil', { type: 'error' });
+                 }
+               };
+
+               // ── Admin Management ──────────────────────────────
+               const handleChangeRole = async () => {
+                 if (!mgmtUserId) { addToast('Ingresa el ID del usuario', { type: 'error' }); return; }
+                 if (!window.confirm(`¿Cambiar rol del usuario ${mgmtUserId} a ${mgmtNewRole}?`)) return;
+                 try {
+                   await api.put(`/admin/management/users/${mgmtUserId}/role`, { role: mgmtNewRole });
+                   addToast('Rol actualizado correctamente', { type: 'success' });
+                   setMgmtUserId('');
+                   if (selectedMenu === 'students') loadStudents(studentPage);
+                   if (selectedMenu === 'instructors') loadInstructors(instructorPage);
+                 } catch (err) {
+                   addToast(err.response?.data?.message || 'Error actualizando rol', { type: 'error' });
+                 }
+               };
+
+               const handleToggleActive = async (userId, currentActive) => {
+                 try {
+                   await api.put(`/admin/management/users/${userId}/active`, { active: !currentActive });
+                   addToast(`Usuario ${!currentActive ? 'activado' : 'desactivado'}`, { type: 'success' });
+                   loadStudents(studentPage);
+                 } catch (err) {
+                   addToast('Error cambiando estado del usuario', { type: 'error' });
+                 }
+               };
+
+               const handleIssueCertificate = async () => {
+                 if (!certUserId || !certCourseId) {
+                   addToast('Ingresa ID de usuario y curso', { type: 'error' });
+                   return;
+                 }
+                 try {
+                   await api.post(`/admin/management/certificates/${certUserId}/${certCourseId}`);
+                   addToast('Certificado emitido correctamente', { type: 'success' });
+                   setCertUserId('');
+                   setCertCourseId('');
+                 } catch (err) {
+                   addToast(err.response?.data?.message || 'Error emitiendo certificado', { type: 'error' });
+                 }
+               };
+
                return (
                  <div className="admin-container">
                    <div className="admin-header">
@@ -488,6 +640,27 @@
                            onClick={() => setSelectedMenu('audit')}
                          >
                            Audit Logs
+                         </button>
+
+                         <button
+                           className={`admin-menu-item ${selectedMenu === 'students' ? 'active' : ''}`}
+                           onClick={() => setSelectedMenu('students')}
+                         >
+                           Estudiantes
+                         </button>
+
+                         <button
+                           className={`admin-menu-item ${selectedMenu === 'instructors' ? 'active' : ''}`}
+                           onClick={() => setSelectedMenu('instructors')}
+                         >
+                           Instructores
+                         </button>
+
+                         <button
+                           className={`admin-menu-item ${selectedMenu === 'admin-mgmt' ? 'active' : ''}`}
+                           onClick={() => setSelectedMenu('admin-mgmt')}
+                         >
+                           Gestión Roles
                          </button>
                        </nav>
                      </aside>
@@ -813,10 +986,156 @@
                            )}
                          </div>
                        )}
+                       {/* ── Estudiantes ─────────────────────────────── */}
+                       {selectedMenu === 'students' && (
+                         <div className="admin-section">
+                           <div className="section-header">
+                             <h2>Estudiantes</h2>
+                           </div>
+                           <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                             <input
+                               type="text"
+                               placeholder="Buscar por nombre o email..."
+                               value={studentSearch}
+                               onChange={(e) => setStudentSearch(e.target.value)}
+                               style={{ flex: 1, padding: '8px 12px', border: '1px solid #ddd', borderRadius: 6 }}
+                             />
+                             <button className="btn-create" onClick={() => loadStudents(0)}>Buscar</button>
+                           </div>
+                           {loadingStudents ? (
+                             <div style={{ padding: 20, textAlign: 'center' }}>Cargando estudiantes...</div>
+                           ) : (
+                             <div className="users-list">
+                               {students.length === 0 ? (
+                                 <div style={{ padding: 20 }}>No se encontraron estudiantes.</div>
+                               ) : (
+                                 students.map((s) => (
+                                   <div key={s.id} className="admin-user-card">
+                                     <div className="user-info">
+                                       <h3>{s.fullName}</h3>
+                                       <p>{s.email}</p>
+                                       <span className="meta">{s.role} • {s.isActive ? 'Activo' : 'Inactivo'}</span>
+                                     </div>
+                                     <div className="user-actions">
+                                       <button className="btn-detail" onClick={() => openStudentDetail(s.id)}>Ver detalle</button>
+                                       <button className="btn-create" onClick={() => openStudentProgress(s.id)}>Progreso</button>
+                                       <button className="btn-edit" onClick={() => openProfileEdit(s, 'students')}>Editar perfil</button>
+                                       <button
+                                         className={s.isActive ? 'btn-delete' : 'btn-submit'}
+                                         onClick={() => handleToggleActive(s.id, s.isActive)}
+                                       >
+                                         {s.isActive ? 'Desactivar' : 'Activar'}
+                                       </button>
+                                     </div>
+                                   </div>
+                                 ))
+                               )}
+                               <div style={{ marginTop: 12 }}>
+                                 <button onClick={() => loadStudents(Math.max(0, studentPage - 1))} disabled={studentPage === 0}>Anterior</button>
+                                 <button onClick={() => loadStudents(studentPage + 1)} style={{ marginLeft: 8 }}>Siguiente</button>
+                               </div>
+                             </div>
+                           )}
+                         </div>
+                       )}
+
+                       {/* ── Instructores ─────────────────────────────── */}
+                       {selectedMenu === 'instructors' && (
+                         <div className="admin-section">
+                           <div className="section-header">
+                             <h2>Instructores</h2>
+                           </div>
+                           <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                             <input
+                               type="text"
+                               placeholder="Buscar por nombre o email..."
+                               value={instructorSearch}
+                               onChange={(e) => setInstructorSearch(e.target.value)}
+                               style={{ flex: 1, padding: '8px 12px', border: '1px solid #ddd', borderRadius: 6 }}
+                             />
+                             <button className="btn-create" onClick={() => loadInstructors(0)}>Buscar</button>
+                           </div>
+                           {loadingInstructors ? (
+                             <div style={{ padding: 20, textAlign: 'center' }}>Cargando instructores...</div>
+                           ) : (
+                             <div className="users-list">
+                               {instructors.length === 0 ? (
+                                 <div style={{ padding: 20 }}>No se encontraron instructores.</div>
+                               ) : (
+                                 instructors.map((ins) => (
+                                   <div key={ins.id} className="admin-user-card">
+                                     <div className="user-info">
+                                       <h3>{ins.fullName}</h3>
+                                       <p>{ins.email}</p>
+                                       <span className="meta">{ins.role} • {ins.courseCount || 0} cursos</span>
+                                     </div>
+                                     <div className="user-actions">
+                                       <button className="btn-detail" onClick={() => openInstructorDetail(ins.id)}>Ver detalle</button>
+                                       <button className="btn-edit" onClick={() => openProfileEdit(ins, 'instructors')}>Editar perfil</button>
+                                     </div>
+                                   </div>
+                                 ))
+                               )}
+                               <div style={{ marginTop: 12 }}>
+                                 <button onClick={() => loadInstructors(Math.max(0, instructorPage - 1))} disabled={instructorPage === 0}>Anterior</button>
+                                 <button onClick={() => loadInstructors(instructorPage + 1)} style={{ marginLeft: 8 }}>Siguiente</button>
+                               </div>
+                             </div>
+                           )}
+                         </div>
+                       )}
+
+                       {/* ── Gestión Roles ─────────────────────────────── */}
+                       {selectedMenu === 'admin-mgmt' && (
+                         <div className="admin-section">
+                           <div className="section-header">
+                             <h2>Gestión de Roles y Permisos</h2>
+                           </div>
+                           <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                             <div style={{ padding: 20, background: '#fff', borderRadius: 8, boxShadow: '0 1px 4px rgba(0,0,0,.08)' }}>
+                               <h3>Cambiar Rol de Usuario</h3>
+                               <div style={{ display: 'flex', gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
+                                 <input
+                                   type="number"
+                                   placeholder="ID de Usuario"
+                                   value={mgmtUserId}
+                                   onChange={(e) => setMgmtUserId(e.target.value)}
+                                   style={{ width: 140, padding: '8px 12px', border: '1px solid #ddd', borderRadius: 6 }}
+                                 />
+                                 <select value={mgmtNewRole} onChange={(e) => setMgmtNewRole(e.target.value)} className="role-select">
+                                   <option value="STUDENT">STUDENT</option>
+                                   <option value="INSTRUCTOR">INSTRUCTOR</option>
+                                   <option value="ADMIN">ADMIN</option>
+                                 </select>
+                                 <button className="btn-submit" onClick={handleChangeRole}>Cambiar Rol</button>
+                               </div>
+                             </div>
+                             <div style={{ padding: 20, background: '#fff', borderRadius: 8, boxShadow: '0 1px 4px rgba(0,0,0,.08)' }}>
+                               <h3>Emitir Certificado</h3>
+                               <div style={{ display: 'flex', gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
+                                 <input
+                                   type="number"
+                                   placeholder="ID de Usuario"
+                                   value={certUserId}
+                                   onChange={(e) => setCertUserId(e.target.value)}
+                                   style={{ width: 140, padding: '8px 12px', border: '1px solid #ddd', borderRadius: 6 }}
+                                 />
+                                 <input
+                                   type="number"
+                                   placeholder="ID de Curso"
+                                   value={certCourseId}
+                                   onChange={(e) => setCertCourseId(e.target.value)}
+                                   style={{ width: 140, padding: '8px 12px', border: '1px solid #ddd', borderRadius: 6 }}
+                                 />
+                                 <button className="btn-submit" onClick={handleIssueCertificate}>Emitir Certificado</button>
+                               </div>
+                             </div>
+                           </div>
+                         </div>
+                       )}
                      </main>
                    </div>
 
-                   {/* Course detail modal */}
                    {showCourseDetail && (
                      <div className="modal" role="dialog" aria-modal="true">
                        <div className="modal-content course-detail-modal">
@@ -988,6 +1307,141 @@
                            <p><strong>Estado:</strong> {purchaseDetail.status}</p>
                            <p><strong>Stripe Payment ID:</strong> {purchaseDetail.stripePaymentId}</p>
                            <p><strong>Fecha:</strong> {new Date(purchaseDetail.purchasedAt).toLocaleString()}</p>
+                         </div>
+                       </div>
+                     </div>
+                   )}
+
+                   {/* ── Student Detail Modal ── */}
+                   {showStudentDetail && studentDetail && (
+                     <div className="modal" role="dialog" aria-modal="true">
+                       <div className="modal-content user-detail-modal">
+                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                           <h2>{studentDetail.fullName}</h2>
+                           <button className="btn-cancel" onClick={() => { setShowStudentDetail(false); setStudentDetail(null); }}>Cerrar</button>
+                         </div>
+                         <div style={{ marginTop: 12 }}>
+                           <p><strong>Email:</strong> {studentDetail.email}</p>
+                           <p><strong>Rol:</strong> {studentDetail.role}</p>
+                           <p><strong>Estado:</strong> {studentDetail.isActive ? 'Activo' : 'Inactivo'}</p>
+                           {studentDetail.bio && <p><strong>Bio:</strong> {studentDetail.bio}</p>}
+                           {studentDetail.lastLogin && <p><strong>Último acceso:</strong> {new Date(studentDetail.lastLogin).toLocaleString()}</p>}
+                           <p><strong>Inscripciones:</strong> {studentDetail.enrollmentCount || 0}</p>
+                           <p><strong>Certificados:</strong> {studentDetail.certificateCount || 0}</p>
+                           {studentDetail.enrollments && studentDetail.enrollments.length > 0 && (
+                             <div style={{ marginTop: 12 }}>
+                               <h4>Inscripciones</h4>
+                               {studentDetail.enrollments.map((enr, i) => (
+                                 <div key={i} style={{ padding: '6px 0', borderBottom: '1px solid #eee' }}>
+                                   <strong>{enr.courseTitle}</strong>
+                                   {' — '}{enr.progressPercent != null ? enr.progressPercent.toFixed(0) : 0}% completado
+                                   {enr.completedAt && <span className="meta"> • Completado {new Date(enr.completedAt).toLocaleDateString()}</span>}
+                                 </div>
+                               ))}
+                             </div>
+                           )}
+                         </div>
+                       </div>
+                     </div>
+                   )}
+
+                   {/* ── Student Progress Modal ── */}
+                   {showStudentProgress && (
+                     <div className="modal" role="dialog" aria-modal="true">
+                       <div className="modal-content">
+                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                           <h2>Progreso del Estudiante</h2>
+                           <button className="btn-cancel" onClick={() => { setShowStudentProgress(false); setStudentProgress([]); }}>Cerrar</button>
+                         </div>
+                         <div style={{ marginTop: 12 }}>
+                           {studentProgress.length === 0 ? (
+                             <p>No hay progreso registrado.</p>
+                           ) : (
+                             studentProgress.map((prog, i) => (
+                               <div key={i} style={{ marginBottom: 16 }}>
+                                 <h4 style={{ marginBottom: 4 }}>{prog.courseTitle}</h4>
+                                 <div style={{ background: '#eee', borderRadius: 4, height: 12, overflow: 'hidden' }}>
+                                   <div style={{ width: `${prog.progressPercent || 0}%`, height: '100%', background: '#667eea' }} />
+                                 </div>
+                                 <span className="meta">{prog.completedLessons}/{prog.totalLessons} lecciones • {prog.progressPercent != null ? prog.progressPercent.toFixed(0) : 0}%</span>
+                               </div>
+                             ))
+                           )}
+                         </div>
+                       </div>
+                     </div>
+                   )}
+
+                   {/* ── Instructor Detail Modal ── */}
+                   {showInstructorDetail && instructorDetail && (
+                     <div className="modal" role="dialog" aria-modal="true">
+                       <div className="modal-content user-detail-modal">
+                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                           <h2>{instructorDetail.fullName}</h2>
+                           <button className="btn-cancel" onClick={() => { setShowInstructorDetail(false); setInstructorDetail(null); }}>Cerrar</button>
+                         </div>
+                         <div style={{ marginTop: 12 }}>
+                           <p><strong>Email:</strong> {instructorDetail.email}</p>
+                           <p><strong>Rol:</strong> {instructorDetail.role}</p>
+                           {instructorDetail.bio && <p><strong>Bio:</strong> {instructorDetail.bio}</p>}
+                           {instructorDetail.lastLogin && <p><strong>Último acceso:</strong> {new Date(instructorDetail.lastLogin).toLocaleString()}</p>}
+                           <p><strong>Cursos asignados:</strong> {instructorDetail.courseCount || 0}</p>
+                           {instructorDetail.courses && instructorDetail.courses.length > 0 && (
+                             <div style={{ marginTop: 12 }}>
+                               <h4>Cursos</h4>
+                               {instructorDetail.courses.map((c, i) => (
+                                 <div key={i} style={{ padding: '6px 0', borderBottom: '1px solid #eee' }}>
+                                   <strong>{c.title}</strong>
+                                   <span className="meta"> • {c.enrollmentCount || 0} estudiantes</span>
+                                 </div>
+                               ))}
+                             </div>
+                           )}
+                         </div>
+                       </div>
+                     </div>
+                   )}
+
+                   {/* ── Profile Edit Modal ── */}
+                   {showProfileEdit && (
+                     <div className="modal" role="dialog" aria-modal="true">
+                       <div className="modal-content">
+                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                           <h2>Editar Perfil</h2>
+                           <button className="btn-cancel" onClick={() => setShowProfileEdit(false)}>Cerrar</button>
+                         </div>
+                         <div style={{ marginTop: 12 }}>
+                           <div style={{ marginBottom: 10 }}>
+                             <label style={{ display: 'block', marginBottom: 4, fontWeight: 600 }}>Nombre completo</label>
+                             <input
+                               type="text"
+                               value={profileForm.fullName}
+                               onChange={(e) => setProfileForm({ ...profileForm, fullName: e.target.value })}
+                               style={{ width: '100%', padding: '8px 12px', border: '1px solid #ddd', borderRadius: 6 }}
+                             />
+                           </div>
+                           <div style={{ marginBottom: 10 }}>
+                             <label style={{ display: 'block', marginBottom: 4, fontWeight: 600 }}>Bio</label>
+                             <textarea
+                               value={profileForm.bio}
+                               onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })}
+                               rows={3}
+                               style={{ width: '100%', padding: '8px 12px', border: '1px solid #ddd', borderRadius: 6 }}
+                             />
+                           </div>
+                           <div style={{ marginBottom: 10 }}>
+                             <label style={{ display: 'block', marginBottom: 4, fontWeight: 600 }}>URL de Avatar</label>
+                             <input
+                               type="text"
+                               value={profileForm.avatarUrl}
+                               onChange={(e) => setProfileForm({ ...profileForm, avatarUrl: e.target.value })}
+                               style={{ width: '100%', padding: '8px 12px', border: '1px solid #ddd', borderRadius: 6 }}
+                             />
+                           </div>
+                           <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+                             <button className="btn-submit" onClick={saveProfile}>Guardar</button>
+                             <button className="btn-cancel" onClick={() => setShowProfileEdit(false)}>Cancelar</button>
+                           </div>
                          </div>
                        </div>
                      </div>

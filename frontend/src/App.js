@@ -8,6 +8,7 @@ import CourseDetail from './pages/CourseDetail';
 import Lesson from './pages/Lesson';
 import Admin from './pages/Admin';
 import Assessments from './pages/Assessments';
+import Profile from './pages/Profile';
 import './App.css';
 import Header from './components/Header';
 import { ToastProvider } from './components/ToastProvider';
@@ -44,6 +45,14 @@ function App() {
               }
             />
             <Route path="/assessments" element={<Assessments />} />
+            <Route
+              path="/profile"
+              element={
+                <PrivateRoute>
+                  <Profile />
+                </PrivateRoute>
+              }
+            />
           </Routes>
         </Router>
       </ToastProvider>

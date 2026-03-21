@@ -25,7 +25,7 @@ public class AuthService {
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setFullName(request.getFullName());
-        user.setRole(User.Role.USER);
+        user.setRole(User.Role.STUDENT);
         
         user = userRepository.save(user);
         
@@ -34,6 +34,7 @@ public class AuthService {
         return buildAuthResponse(user, token);
     }
     
+    @Transactional
     public AuthDto.AuthResponse login(AuthDto.LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("Invalid credentials"));
@@ -41,6 +42,10 @@ public class AuthService {
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new RuntimeException("Invalid credentials");
         }
+        
+        // Track last login time
+        user.setLastLogin(java.time.LocalDateTime.now());
+        userRepository.save(user);
         
         String token = jwtService.generateToken(user.getEmail(), user.getId(), user.getRole().name());
         

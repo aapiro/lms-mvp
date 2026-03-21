@@ -13,9 +13,10 @@ function Header() {
         <div className="header-actions">
           {user ? (
             <>
-              <span>Welcome, {user.fullName}</span>
+              <span>Hola, {user.fullName}</span>
+              <Link to="/profile" className="btn-profile">Mi Perfil</Link>
               {isAdmin() && <Link to="/admin" className="btn-admin">Admin Panel</Link>}
-              <button onClick={logout} className="btn-logout">Logout</button>
+              <button onClick={logout} className="btn-logout">Cerrar sesión</button>
             </>
           ) : (
             <>

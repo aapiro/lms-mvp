@@ -81,3 +81,20 @@
 .btn-logout:hover {
   background: #c0392b;
 }
+
+.btn-profile {
+  padding: 10px 20px;
+  border-radius: 5px;
+  text-decoration: none;
+  font-weight: 600;
+  background: white;
+  color: #667eea;
+  border: 2px solid #667eea;
+  transition: all 0.3s;
+}
+
+.btn-profile:hover {
+  background: #667eea;
+  color: white;
+}
+

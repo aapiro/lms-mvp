@@ -24,7 +24,19 @@ public class User {
     
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Role role = Role.USER;
+    private Role role = Role.STUDENT;
+    
+    @Column(length = 1000)
+    private String bio;
+    
+    @Column(name = "avatar_url")
+    private String avatarUrl;
+    
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive = true;
+    
+    @Column(name = "last_login")
+    private LocalDateTime lastLogin;
     
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -33,7 +45,10 @@ public class User {
     private LocalDateTime updatedAt = LocalDateTime.now();
     
     public enum Role {
-        USER, ADMIN
+        USER,        // legacy – treated as STUDENT
+        STUDENT,
+        INSTRUCTOR,
+        ADMIN
     }
     
     @PreUpdate
