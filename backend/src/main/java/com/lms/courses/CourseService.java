@@ -164,9 +164,10 @@ public class CourseService {
         boolean isFree = course.getPrice() != null && course.getPrice().compareTo(BigDecimal.ZERO) == 0;
         boolean hasPurchase = user != null && purchaseRepository.existsByUserIdAndCourseIdAndStatus(
                 user.getId(), courseId, Purchase.PurchaseStatus.COMPLETED);
-        response.setPurchased(isFree || hasPurchase);
+        // purchased is only true for authenticated users
+        response.setPurchased(user != null && (isFree || hasPurchase));
 
-        if (response.isPurchased() && user != null) {
+        if (response.isPurchased()) {
             response.setProgressPercentage(calculateProgress(user.getId(), courseId, lessons));
         }
 
@@ -291,15 +292,19 @@ public class CourseService {
         response.setLessonCount(lessons.size());
 
         boolean isFree = course.getPrice() != null && course.getPrice().compareTo(BigDecimal.ZERO) == 0;
-        if (isFree) {
-            response.setPurchased(true);
-            if (user != null) response.setProgressPercentage(calculateProgress(user.getId(), course.getId(), lessons));
-        } else if (user != null) {
-            boolean purchased = purchaseRepository.existsByUserIdAndCourseIdAndStatus(
-                    user.getId(), course.getId(), Purchase.PurchaseStatus.COMPLETED);
-            response.setPurchased(purchased);
-            if (purchased) response.setProgressPercentage(calculateProgress(user.getId(), course.getId(), lessons));
+        // purchased and progress are only set for authenticated users
+        if (user != null) {
+            if (isFree) {
+                response.setPurchased(true);
+                response.setProgressPercentage(calculateProgress(user.getId(), course.getId(), lessons));
+            } else {
+                boolean purchased = purchaseRepository.existsByUserIdAndCourseIdAndStatus(
+                        user.getId(), course.getId(), Purchase.PurchaseStatus.COMPLETED);
+                response.setPurchased(purchased);
+                if (purchased) response.setProgressPercentage(calculateProgress(user.getId(), course.getId(), lessons));
+            }
         }
+        // user == null → purchased stays false, progressPercentage stays null
         return response;
     }
 

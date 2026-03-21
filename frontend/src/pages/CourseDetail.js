@@ -164,7 +164,7 @@ function CourseDetail() {
       )}
 
       <div className="course-actions">
-        {course.purchased ? (
+        {course.purchased && user ? (
           <div className="purchased-info">
             <span className="badge-owned">✓ Owned</span>
             <div className="progress-section">

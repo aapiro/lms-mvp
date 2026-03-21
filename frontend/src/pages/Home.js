@@ -136,7 +136,7 @@ function Home() {
                       <span className="badge-capacity">{course.enrolledCount}/{course.capacityLimit} plazas</span>
                     )}
                   </div>
-                  {course.purchased && (
+                  {course.purchased && user && (
                     <div className="progress-bar">
                       <div className="progress-fill" style={{ width: `${course.progressPercentage || 0}%` }}></div>
                       <span className="progress-text">{course.progressPercentage || 0}% Complete</span>
@@ -144,7 +144,7 @@ function Home() {
                   )}
                 </div>
                 <Link to={`/course/${course.id}`} className="btn-view">
-                  {course.purchased ? 'Continue Learning' : 'View Details'}
+                  {course.purchased && user ? 'Continue Learning' : 'View Details'}
                 </Link>
               </div>
             ))}
