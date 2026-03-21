@@ -157,15 +157,14 @@ public class CourseService {
         LocalDateTime purchaseDate = null;
         if (user != null) {
             purchaseDate = purchaseRepository.findByUserIdAndCourseId(user.getId(), courseId)
-                    .map(p -> p.getPurchasedAt()).orElse(null);
+                    .map(Purchase::getPurchasedAt).orElse(null);
         }
         final LocalDateTime pd = purchaseDate;
 
-        boolean isFree = course.getPrice() != null && course.getPrice().compareTo(BigDecimal.ZERO) == 0;
         boolean hasPurchase = user != null && purchaseRepository.existsByUserIdAndCourseIdAndStatus(
                 user.getId(), courseId, Purchase.PurchaseStatus.COMPLETED);
-        // purchased is only true for authenticated users
-        response.setPurchased(user != null && (isFree || hasPurchase));
+        // purchased is only true for authenticated users with a completed purchase
+        response.setPurchased(user != null && hasPurchase);
 
         if (response.isPurchased()) {
             response.setProgressPercentage(calculateProgress(user.getId(), courseId, lessons));
@@ -329,17 +328,13 @@ public class CourseService {
         List<Lesson> lessons = lessonRepository.findByCourseIdOrderByLessonOrderAsc(course.getId());
         response.setLessonCount(lessons.size());
 
-        boolean isFree = course.getPrice() != null && course.getPrice().compareTo(BigDecimal.ZERO) == 0;
-        // purchased and progress are only set for authenticated users
+        // For authenticated users: check if they have a completed purchase
         if (user != null) {
-            if (isFree) {
-                response.setPurchased(true);
+            boolean purchased = purchaseRepository.existsByUserIdAndCourseIdAndStatus(
+                    user.getId(), course.getId(), Purchase.PurchaseStatus.COMPLETED);
+            response.setPurchased(purchased);
+            if (purchased) {
                 response.setProgressPercentage(calculateProgress(user.getId(), course.getId(), lessons));
-            } else {
-                boolean purchased = purchaseRepository.existsByUserIdAndCourseIdAndStatus(
-                        user.getId(), course.getId(), Purchase.PurchaseStatus.COMPLETED);
-                response.setPurchased(purchased);
-                if (purchased) response.setProgressPercentage(calculateProgress(user.getId(), course.getId(), lessons));
             }
         }
         // user == null → purchased stays false, progressPercentage stays null

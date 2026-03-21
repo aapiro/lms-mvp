@@ -267,24 +267,40 @@
 
 ## Pruebas Manuales Recomendadas
 
-- [ ] Crear curso con estado DRAFT
-- [ ] Publicar curso (cambiar a PUBLISHED)
-- [ ] Crear módulos y asignar lecciones
-- [ ] Crear categorías y tags
-- [ ] Asignar categorías/tags a curso
-- [ ] Establecer prerrequisito entre dos cursos
-- [ ] Completar prerequisito y verificar acceso
-- [ ] Cargar archivo AUDIO
-- [ ] Reproducir audio en lección
-- [ ] Establecer drip content (release_after_days o available_from)
-- [ ] Verificar que lección está bloqueada
-- [ ] Esperar periodo o cambiar fecha
-- [ ] Verificar que lección se desbloquea
-- [ ] Establecer capacityLimit
-- [ ] Verificar limitación en matrícula
-- [ ] Filtrar cursos por categoría
-- [ ] Filtrar cursos por tag
-- [ ] Filtrar cursos por enrollmentType
+- [x] Crear curso con estado DRAFT
+- [x] Publicar curso (cambiar a PUBLISHED)
+- [x] Crear módulos y asignar lecciones
+- [x] Crear categorías y tags
+- [x] Asignar categorías/tags a curso
+- [x] Establecer prerrequisito entre dos cursos
+- [x] Completar prerequisito y verificar acceso
+- [x] Cargar archivo AUDIO
+- [x] Reproducir audio en lección
+- [x] Establecer drip content (release_after_days o available_from)
+- [x] Verificar que lección está bloqueada
+- [x] Esperar periodo o cambiar fecha
+- [x] Verificar que lección se desbloquea
+- [x] Establecer capacityLimit
+- [x] Verificar limitación en matrícula
+- [x] Filtrar cursos por categoría
+- [x] Filtrar cursos por tag
+- [x] Filtrar cursos por enrollmentType
+
+## Correcciones y Mejoras Post-Implementación
+
+### ✅ Modales Superpuestos en Admin (21 de Marzo de 2026)
+- [x] Identificado problema de z-index en Admin.js
+- [x] Reordenado renderizado de modales
+- [x] Corregida jerarquía de z-index para modales (Course Students: 1000, Details/Progress: 1100)
+- [x] Validado que modales de estudiante se abren correctamente desde lista del curso
+
+### ✅ Cursos Gratis Incorrectamente "Owned" para Todos (21 de Marzo de 2026)
+- [x] Identificado problema: cursos gratis se marcaban automáticamente como purchased para todos
+- [x] Corregida lógica en CourseService.buildCourseResponse()
+- [x] Corregida lógica en CourseService.getCourseById()
+- [x] Creada migración V17 para generar registros de compra con monto 0
+- [x] Verificado que frontend ya manejaba correctamente cursos gratis
+- [x] Documentado en CHANGELOG_FIXES.md
 
 ## Notas
 

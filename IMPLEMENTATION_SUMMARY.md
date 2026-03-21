@@ -444,7 +444,49 @@ backend/src/main/resources/db/migration/
 
 ---
 
+## Actualizaciones Post-Implementación
+
+### 21 de Marzo de 2026 - Correcciones de UI y Lógica de Negocio
+
+#### ✅ Resolución de Modales Superpuestos en Admin
+Se identificó y corrigió un problema donde el modal de "Estudiantes del Curso" quedaba permanentemente encima cuando se intentaba acceder a los modales de "Perfil del Estudiante" o "Progreso".
+
+**Cambios:**
+- Reordenado el renderizado de modales en `Admin.js`
+- Establecida jerarquía correcta de z-index
+- Course Students Modal: `z-index: 1000`
+- Student Detail & Progress Modals: `z-index: 1100`
+
+**Resultado:** ✅ Modales funcionan correctamente sin bloqueos visuales
+
+---
+
+#### ✅ Corrección de Lógica de Cursos Gratis
+Se identificó que los cursos gratis (`price = 0`) se marcaban automáticamente como "owned/purchased" para TODOS los usuarios autenticados, sin validar compras reales.
+
+**Cambios:**
+
+1. **Backend:**
+   - Removida lógica que auto-marcaba cursos gratis como purchased
+   - `CourseService.java`: Solo marca como purchased si hay un registro en `purchases` con status COMPLETED
+   - Mantiene acceso a lecciones para cursos gratis (lógica en `LessonService`)
+
+2. **Base de Datos:**
+   - Nueva migración `V17__fix_free_course_enrollments.sql`
+   - Genera registros de compra con monto 0 para todos los usuarios en cursos gratis
+   - Garantiza que cursos gratis aparezcan como "owned" después de ejecutarse
+
+3. **Frontend:**
+   - Ya estaba correctamente implementado
+   - Permite acceso a cursos gratis aunque `purchased = false`
+   - Muestra "Free" en lugar de "Purchase"
+
+**Resultado:** ✅ Solo cursos con registros de compra real aparecen como "owned"
+
+---
+
 **Responsable:** GitHub Copilot  
-**Fecha Finalización:** 21 de marzo de 2026  
+**Última Actualización:** 21 de marzo de 2026  
 **Versión Plan:** PLAN_COURSE_MANAGEMENT.md  
+**Changelog:** CHANGELOG_FIXES.md
 
