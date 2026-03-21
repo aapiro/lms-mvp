@@ -96,3 +96,19 @@
 .btn-unmark:hover {
   background: #feecec;
 }
+
+.login-hint {
+  color: #666;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.login-hint a {
+  color: #667eea;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.login-hint a:hover {
+  text-decoration: underline;
+}

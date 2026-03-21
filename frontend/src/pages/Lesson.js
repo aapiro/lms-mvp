@@ -4,9 +4,11 @@ import api from '../api/api';
 import './Lesson.css';
 import ConfirmModal from '../components/ConfirmModal';
 import { useToast } from '../components/ToastProvider';
+import { useAuth } from '../context/AuthContext';
 
 function Lesson() {
   const toast = useToast();
+  const { user } = useAuth();
   const { id } = useParams();
   const navigate = useNavigate();
   const [lesson, setLesson] = useState(null);
@@ -237,24 +239,30 @@ function Lesson() {
       </div>
 
       <div className="lesson-actions">
-        {lesson.completed ? (
-          <>
-            <button onClick={() => setShowUnmarkConfirm(true)} className="btn-complete btn-unmark">
-              Unmark
+        {user ? (
+          lesson.completed ? (
+            <>
+              <button onClick={() => setShowUnmarkConfirm(true)} className="btn-complete btn-unmark">
+                Unmark
+              </button>
+              {showUnmarkConfirm && (
+                <ConfirmModal
+                  title="Unmark lesson"
+                  message="Are you sure you want to mark this lesson as incomplete? This will update your course progress."
+                  onConfirm={unmarkCompleted}
+                  onCancel={() => setShowUnmarkConfirm(false)}
+                />
+              )}
+            </>
+          ) : (
+            <button onClick={markCompleted} className="btn-complete">
+              Mark as Completed
             </button>
-            {showUnmarkConfirm && (
-              <ConfirmModal
-                title="Unmark lesson"
-                message="Are you sure you want to mark this lesson as incomplete? This will update your course progress."
-                onConfirm={unmarkCompleted}
-                onCancel={() => setShowUnmarkConfirm(false)}
-              />
-            )}
-          </>
+          )
         ) : (
-          <button onClick={markCompleted} className="btn-complete">
-            Mark as Completed
-          </button>
+          <p className="login-hint">
+            <a href="/login">Inicia sesión</a> para registrar tu progreso en este curso.
+          </p>
         )}
        </div>
     </div>
