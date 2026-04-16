@@ -7,6 +7,7 @@ import ProfileInfo from './profile/ProfileInfo';
 import ProfileCourses from './profile/ProfileCourses';
 import ProfileCertificates from './profile/ProfileCertificates';
 import ProfilePassword from './profile/ProfilePassword';
+import GamificationWidget from '../components/domain/GamificationWidget';
 import './Profile.css';
 
 function Profile() {
@@ -46,6 +47,7 @@ function Profile() {
     { key: 'info', label: '👤 Mi Información' },
     { key: 'courses', label: '📚 Mis Cursos', badge: profile.enrollments?.length },
     { key: 'certificates', label: '🏆 Certificados', badge: profile.certificates?.length },
+    { key: 'gamification', label: '🎮 Logros y XP' },
     { key: 'password', label: '🔒 Cambiar Contraseña' },
   ];
 
@@ -90,6 +92,9 @@ function Profile() {
         )}
         {activeTab === 'certificates' && (
           <ProfileCertificates certificates={profile.certificates} />
+        )}
+        {activeTab === 'gamification' && (
+          <GamificationWidget />
         )}
         {activeTab === 'password' && (
           <ProfilePassword />

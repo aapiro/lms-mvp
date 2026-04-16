@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import NotificationBell from './domain/NotificationBell';
 import SearchBar from './domain/SearchBar';
+import { XpBadge } from './domain/GamificationWidget';
 import './Header.css';
 
 function Header() {
@@ -55,6 +56,7 @@ function Header() {
             {theme === 'dark' ? '☀️' : '🌙'}
           </button>
 
+          {user && <XpBadge />}
           {user && <NotificationBell />}
 
           {user ? (

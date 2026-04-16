@@ -1,0 +1,27 @@
+/* ─── EmptyState ───────────────────────────────────────────── */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  color: var(--color-text-muted, #999);
+}
+
+.empty-state__icon {
+  font-size: 3rem;
+  margin-bottom: 12px;
+  line-height: 1;
+}
+
+.empty-state__title {
+  font-size: var(--text-lg, 1.125rem);
+  color: var(--color-text-secondary, #666);
+  margin: 0 0 8px;
+}
+
+.empty-state__description {
+  font-size: var(--text-base, 1rem);
+  margin: 0 0 16px;
+}
+
+.empty-state__action {
+  margin-top: 12px;
+}

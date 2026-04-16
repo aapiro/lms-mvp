@@ -5,6 +5,7 @@ import './Lesson.css';
 import ConfirmModal from '../components/ConfirmModal';
 import { useToast } from '../components/ToastProvider';
 import { useAuth } from '../context/AuthContext';
+import AiTutor from '../components/domain/AiTutor';
 
 function Lesson() {
   const toast = useToast();
@@ -359,6 +360,9 @@ function Lesson() {
           </button>
         </div>
       )}
+
+      {/* AI Tutor floating chat */}
+      {lesson && lesson.courseId && <AiTutor courseId={lesson.courseId} />}
     </div>
   );
 }

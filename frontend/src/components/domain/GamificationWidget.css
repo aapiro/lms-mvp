@@ -1,0 +1,175 @@
+/* ── Gamification Widget ────────────────────────── */
+.gamification-widget {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+/* Tabs */
+.gw-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--color-border);
+}
+.gw-tab {
+  flex: 1;
+  padding: 12px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.gw-tab:hover { color: var(--color-text); }
+.gw-tab.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+/* Stats */
+.gw-stats { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+
+.gw-level-card {
+  background: var(--color-primary-gradient);
+  color: white;
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+.gw-level-badge {
+  display: inline-block;
+  background: rgba(255,255,255,0.2);
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-weight: 700;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+.gw-xp-info { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.gw-xp-total { font-size: 24px; font-weight: 700; }
+.gw-xp-next { font-size: 12px; opacity: 0.8; }
+.gw-xp-bar {
+  height: 8px;
+  background: rgba(255,255,255,0.2);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+.gw-xp-fill {
+  height: 100%;
+  background: white;
+  border-radius: var(--radius-full);
+  transition: width 0.5s ease;
+}
+
+.gw-streak-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  background: var(--color-bg-alt);
+  border-radius: var(--radius-md);
+}
+.gw-streak-icon { font-size: 28px; }
+.gw-streak-card strong { display: block; font-size: 16px; color: var(--color-text); }
+.gw-streak-label { display: block; font-size: 12px; color: var(--color-text-muted); }
+.gw-streak-best { margin-left: auto; font-size: 12px; color: var(--color-text-muted); }
+
+.gw-quick-stats { display: flex; gap: 12px; }
+.gw-stat-item {
+  flex: 1;
+  text-align: center;
+  padding: 12px;
+  background: var(--color-bg-alt);
+  border-radius: var(--radius-md);
+}
+.gw-stat-value { display: block; font-size: 20px; font-weight: 700; color: var(--color-primary); }
+.gw-stat-label { display: block; font-size: 11px; color: var(--color-text-muted); text-transform: uppercase; }
+
+/* Badges */
+.gw-badges { padding: 20px; }
+.gw-badges-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+.gw-badge-card {
+  text-align: center;
+  padding: 16px 12px;
+  background: var(--color-bg-alt);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.gw-badge-icon { font-size: 32px; }
+.gw-badge-card strong { font-size: 13px; color: var(--color-text); }
+.gw-badge-desc { font-size: 11px; color: var(--color-text-muted); }
+
+.gw-empty { padding: 32px; text-align: center; color: var(--color-text-muted); font-size: 14px; }
+
+/* Leaderboard */
+.gw-leaderboard { padding: 16px; }
+.gw-lb-period { display: flex; gap: 8px; margin-bottom: 16px; }
+.gw-lb-period button {
+  padding: 6px 14px;
+  background: var(--color-bg-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  font-family: inherit;
+}
+.gw-lb-period button.active {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+.gw-lb-list { display: flex; flex-direction: column; gap: 8px; }
+.gw-lb-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--color-bg-alt);
+  border-radius: var(--radius-md);
+  transition: background 0.2s;
+}
+.gw-lb-row--me {
+  background: var(--color-primary-light);
+  border: 1.5px solid var(--color-primary);
+}
+.gw-lb-rank { font-size: 18px; min-width: 36px; text-align: center; font-weight: 700; }
+.gw-lb-user { flex: 1; }
+.gw-lb-user strong { display: block; font-size: 14px; color: var(--color-text); }
+.gw-lb-user span { font-size: 12px; color: var(--color-text-muted); }
+.gw-lb-xp { font-size: 14px; font-weight: 700; color: var(--color-primary); }
+
+/* ── XP Badge (header compact) ─────────────────── */
+.xp-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--color-bg-alt);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+.xp-badge-level {
+  background: var(--color-primary);
+  color: white;
+  padding: 2px 6px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+}
+.xp-badge-xp { color: var(--color-primary); }
+.xp-badge-streak { color: #f59e0b; }

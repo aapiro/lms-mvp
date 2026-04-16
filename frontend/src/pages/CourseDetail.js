@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ToastProvider';
 import Assessments from './Assessments';
 import CourseReviews from '../components/domain/CourseReviews';
+import AiTutor from '../components/domain/AiTutor';
 import './CourseDetail.css';
 
 function CourseDetail() {
@@ -241,6 +242,9 @@ function CourseDetail() {
           </div>
         )}
       </div>
+
+      {/* AI Tutor floating chat */}
+      <AiTutor courseId={course.id} />
     </div>
   );
 }
