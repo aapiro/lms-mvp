@@ -110,6 +110,18 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Spring Actuator (monitoring) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!-- Email -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
         <!-- ═══ TEST DEPENDENCIES ═══ -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -5,9 +5,11 @@ import { ThemeProvider } from './context/ThemeContext';
 import { FeatureProvider } from './context/FeatureContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
 import Home from './pages/Home';
 import CourseDetail from './pages/CourseDetail';
 import Lesson from './pages/Lesson';
+import ErrorBoundary from './components/common/ErrorBoundary';
 import './App.css';
 import Header from './components/Header';
 import { ToastProvider } from './components/ToastProvider';
@@ -16,6 +18,8 @@ import { ToastProvider } from './components/ToastProvider';
 const Admin = React.lazy(() => import('./pages/Admin'));
 const Profile = React.lazy(() => import('./pages/Profile'));
 const Assessments = React.lazy(() => import('./pages/Assessments'));
+const Dashboard = React.lazy(() => import('./pages/Dashboard'));
+const ResetPassword = React.lazy(() => import('./pages/ResetPassword'));
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
@@ -37,32 +41,23 @@ function App() {
             <a href="#main-content" className="skip-link">Saltar al contenido</a>
             <Header />
             <main id="main-content">
-              <Suspense fallback={<div className="loading">Cargando...</div>}>
-                <Routes>
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
-                  <Route path="/" element={<Home />} />
-                  <Route path="/course/:id" element={<CourseDetail />} />
-                  <Route path="/lesson/:id" element={<Lesson />} />
-                  <Route
-                    path="/admin"
-                    element={
-                      <PrivateRoute>
-                        <Admin />
-                      </PrivateRoute>
-                    }
-                  />
-                  <Route path="/assessments" element={<Assessments />} />
-                  <Route
-                    path="/profile"
-                    element={
-                      <PrivateRoute>
-                        <Profile />
-                      </PrivateRoute>
-                    }
-                  />
-                </Routes>
-              </Suspense>
+              <ErrorBoundary>
+                <Suspense fallback={<div className="loading">Cargando...</div>}>
+                  <Routes>
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
+                    <Route path="/reset-password/:token" element={<ResetPassword />} />
+                    <Route path="/" element={<Home />} />
+                    <Route path="/course/:id" element={<CourseDetail />} />
+                    <Route path="/lesson/:id" element={<Lesson />} />
+                    <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+                    <Route path="/admin" element={<PrivateRoute><Admin /></PrivateRoute>} />
+                    <Route path="/assessments" element={<Assessments />} />
+                    <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
+                  </Routes>
+                </Suspense>
+              </ErrorBoundary>
             </main>
           </Router>
           </ToastProvider>

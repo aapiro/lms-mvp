@@ -1,0 +1,1 @@
+ALTER TABLE progress ADD COLUMN IF NOT EXISTS last_position_seconds INTEGER DEFAULT 0;

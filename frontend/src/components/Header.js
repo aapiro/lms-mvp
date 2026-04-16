@@ -77,6 +77,9 @@ function Header() {
               </button>
               {dropdownOpen && (
                 <div className="user-dropdown" role="menu">
+                  <Link to="/dashboard" className="dropdown-item" role="menuitem" onClick={() => setDropdownOpen(false)}>
+                    Dashboard
+                  </Link>
                   <Link to="/profile" className="dropdown-item" role="menuitem" onClick={() => setDropdownOpen(false)}>
                     Mi Perfil
                   </Link>

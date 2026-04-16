@@ -57,6 +57,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/search").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/features").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/courses/*/reviews", "/api/courses/*/rating").permitAll()
+                .requestMatchers("/actuator/**").permitAll()
+                .requestMatchers("/api/dashboard").authenticated()
                 .requestMatchers("/api/notifications/**").authenticated()
                 .requestMatchers("/api/tutor/**").authenticated()
                 .requestMatchers("/api/gamification/**").authenticated()
