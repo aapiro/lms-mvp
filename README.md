@@ -166,6 +166,51 @@ curl -s -X POST http://localhost:8080/api/auth/register \
   -d '{"fullName":"Test User","email":"test@example.com","password":"Password123"}' | jq
 ```
 
+## Tests E2E (Playwright)
+
+Prerrequisito: stack en marcha (`docker compose up --build`) con frontend en el puerto **3000** y API en **8080** (valores por defecto del `docker-compose`).
+
+```bash
+cd e2e
+npm ci
+npx playwright install chromium   # primera vez, o: npx playwright install --with-deps (CI/Linux)
+npm test
+```
+
+### Variables de entorno
+
+| Variable | Default | Uso |
+|----------|---------|-----|
+| `PLAYWRIGHT_BASE_URL` | `http://localhost:3000` | URL del frontend |
+| `PLAYWRIGHT_API_URL` | `http://localhost:8080/api` | Base URL de la API (debe ser la misma instancia que usa el navegador vía `REACT_APP_API_URL`) |
+| `PLAYWRIGHT_READY_TIMEOUT_MS` | `120000` | Espera en `global-setup` antes de fallar |
+| `E2E_ADMIN_EMAIL` | `admin@lms.com` | Admin para tests que lo requieren |
+| `E2E_ADMIN_PASSWORD` | `admin123` | Contraseña del admin (sembrada en migración V2) |
+| `E2E_USER_EMAIL` | `test@example.com` | Usuario normal (sembrado en V3) |
+| `E2E_USER_PASSWORD` | `Password123` | Contraseña del usuario de prueba |
+
+No ejecutar esta suite contra producción con credenciales de desarrollo.
+
+### Si falla el login E2E (`Invalid credentials`)
+
+1. Comprueba que la API sea la correcta y que el login funcione **desde la misma máquina** que ejecuta Playwright:
+
+```bash
+curl -s -X POST "${PLAYWRIGHT_API_URL:-http://localhost:8080/api}/auth/login" \
+  -H 'Content-Type: application/json' \
+  -d "{\"email\":\"${E2E_ADMIN_EMAIL:-admin@lms.com}\",\"password\":\"${E2E_ADMIN_PASSWORD:-admin123}\"}"
+```
+
+Debe responder JSON con `token`. Si no, el problema es BD o credenciales (por ejemplo migraciones sin aplicar o volumen antiguo). Tras actualizar el repo, **reinicia el backend** para que Flyway aplique las migraciones en `backend/src/main/resources/db/migration_clean` (incluye `V27__ensure_seeded_demo_passwords.sql`, que vuelve a alinear las contraseñas de `admin@lms.com` y `test@example.com` con el README).
+
+Con **`SPRING_PROFILES_ACTIVE=dev`** (modo desarrollo del `docker-compose.override.yml`), al arrancar el backend se vuelven a codificar con BCrypt esas dos contraseñas para que coincidan siempre con el login; vuelve a lanzar el contenedor backend y espera a ver `Started LmsApplication` antes de ejecutar Playwright.
+
+Si sigue fallando, prueba un reset limpio: `docker compose down -v` y vuelve a levantar el stack.
+
+2. Si el `curl` devuelve `token` pero los tests siguen fallando, alinea `PLAYWRIGHT_API_URL` con la URL que usaste en el `curl`.
+
+Informe HTML local tras un fallo: `npx playwright show-report` (desde `e2e/`).
+
 ## 📁 Estructura del Proyecto
 
 ```
@@ -181,7 +226,7 @@ lms-mvp/
 │   │   ├── storage/       # MinIO client
 │   │   └── config/        # Configuración Spring
 │   ├── src/main/resources/
-│   │   └── db/migration/  # Migraciones Flyway
+│   │   └── db/migration_clean/  # Migraciones Flyway (activas; ver application.properties)
 │   ├── pom.xml
 │   └── Dockerfile
 │
@@ -199,6 +244,12 @@ lms-mvp/
 │   │   └── App.js
 │   ├── package.json
 │   └── Dockerfile
+│
+├── e2e/                   # Tests E2E (Playwright)
+│   ├── tests/
+│   ├── helpers/
+│   ├── playwright.config.ts
+│   └── package.json
 │
 └── docker-compose.yml
 ```

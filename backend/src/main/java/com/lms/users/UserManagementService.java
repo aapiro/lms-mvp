@@ -75,7 +75,7 @@ public class UserManagementService {
 
         // Certificates
         dto.setCertificates(certificateRepository.findByUserId(studentId).stream()
-                .map(c -> buildCertificateDto(c))
+                .map(this::buildCertificateDto)
                 .collect(Collectors.toList()));
 
         return dto;
@@ -120,7 +120,7 @@ public class UserManagementService {
 
         // Assigned courses with performance metrics
         List<Course> courses = courseRepository.findByCreatedBy(instructorId);
-        dto.setAssignedCourses(courses.stream().map(c -> buildCourseMetrics(c))
+        dto.setAssignedCourses(courses.stream().map(this::buildCourseMetrics)
                 .collect(Collectors.toList()));
 
         return dto;

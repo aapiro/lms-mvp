@@ -24,6 +24,7 @@ public class AssessmentService {
     private final QuestionRepository questionRepository;
     private final SubmissionRepository submissionRepository;
     private final GradeRepository gradeRepository;
+    private final AiGradingService aiGradingService;
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -238,13 +239,16 @@ public class AssessmentService {
         return response;
     }
 
-    // Placeholder for AI grading
     public void gradeOpenEndedWithAI(Long gradeId, String questionText, String userAnswer) {
-        // In a real implementation, call OpenAI or similar API
-        // For now, simulate AI grading
         Grade grade = gradeRepository.findById(gradeId).orElseThrow();
-        grade.setScore(5); // Example score
-        grade.setFeedback("Good answer, but could be more detailed.");
+        Question question = questionRepository.findById(grade.getQuestionId()).orElse(null);
+        int maxPoints = question != null ? question.getPoints() : 10;
+
+        AiGradingService.AiGradeResult result = aiGradingService.gradeOpenEnded(questionText, userAnswer, maxPoints);
+        grade.setScore(result.getScore());
+        grade.setFeedback(result.getFeedback());
+        grade.setGradedBy("AI");
+        grade.setGradedAt(LocalDateTime.now());
         gradeRepository.save(grade);
     }
 }

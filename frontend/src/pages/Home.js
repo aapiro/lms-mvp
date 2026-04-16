@@ -12,7 +12,7 @@ function Home() {
   const [filterCategory, setFilterCategory] = useState('');
   const [filterTag, setFilterTag] = useState('');
   const [filterEnrollment, setFilterEnrollment] = useState('');
-  const { user, logout, isAdmin } = useAuth();
+  const { user } = useAuth();
 
   useEffect(() => {
     loadCourses();
@@ -64,7 +64,6 @@ function Home() {
       window.location.href = '/admin';
     } catch (e) {
       console.error('Dev login failed', e);
-      alert('Dev login failed');
     }
   };
 

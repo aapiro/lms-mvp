@@ -1,5 +1,6 @@
 package com.lms.courses;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -19,4 +20,7 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
 
     @Query("SELECT COUNT(p) FROM Purchase p WHERE p.courseId = :courseId AND p.status = 'COMPLETED'")
     long countEnrolled(@Param("courseId") Long courseId);
+
+    @Query("SELECT c FROM Course c WHERE c.status = 'PUBLISHED' AND (LOWER(c.title) LIKE LOWER(CONCAT('%', :term, '%')) OR LOWER(c.description) LIKE LOWER(CONCAT('%', :term, '%')))")
+    List<Course> searchPublished(@Param("term") String term, Pageable pageable);
 }

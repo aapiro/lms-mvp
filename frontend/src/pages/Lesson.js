@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../api/api';
 import './Lesson.css';
 import ConfirmModal from '../components/ConfirmModal';
@@ -21,8 +21,14 @@ function Lesson() {
   const [videoSrc, setVideoSrc] = useState('');
   const [showUnmarkConfirm, setShowUnmarkConfirm] = useState(false);
 
+  // Course data for lesson navigation
+  const [courseData, setCourseData] = useState(null);
+  const [lessonIndex, setLessonIndex] = useState(-1);
+  const [allLessons, setAllLessons] = useState([]);
+
   useEffect(() => {
     loadLesson();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- loadLesson closes over id; listing it would duplicate [id]
   }, [id]);
 
   useEffect(() => {
@@ -84,6 +90,35 @@ function Lesson() {
     // canPlayType returns '', 'probably', or 'maybe'
     setIsPlayable(Boolean(can && can !== ''));
   }, [lesson]);
+
+  // Fetch course data when lesson loads (for navigation)
+  useEffect(() => {
+    if (!lesson || !lesson.courseId) return;
+    api.get(`/courses/${lesson.courseId}`)
+      .then(res => {
+        const course = res.data;
+        setCourseData(course);
+
+        // Flatten lessons from modules or use flat list
+        let flat = [];
+        if (course.modules && course.modules.length > 0) {
+          course.modules.forEach(mod => {
+            if (mod.lessons) {
+              flat = flat.concat(mod.lessons);
+            }
+          });
+        } else if (course.lessons) {
+          flat = course.lessons;
+        }
+        setAllLessons(flat);
+
+        const idx = flat.findIndex(l => String(l.id) === String(id));
+        setLessonIndex(idx);
+      })
+      .catch(() => {
+        // ignore - navigation just won't show
+      });
+  }, [lesson, id]);
 
   const tryPlay = async () => {
     // Attempt to play via Plyr instance or native video element; must be triggered by user gesture
@@ -187,6 +222,10 @@ function Lesson() {
     window.open(streamUrl, '_blank', 'noopener');
   };
 
+  // Navigation helpers
+  const prevLesson = lessonIndex > 0 ? allLessons[lessonIndex - 1] : null;
+  const nextLesson = lessonIndex >= 0 && lessonIndex < allLessons.length - 1 ? allLessons[lessonIndex + 1] : null;
+
   if (loading) return <div className="loading">Loading lesson...</div>;
   if (error) return <div className="error">{error}</div>;
   if (!lesson) return <div className="error">Lesson not found</div>;
@@ -197,6 +236,21 @@ function Lesson() {
         <button onClick={() => navigate(`/course/${lesson?.courseId}`)} className="btn-back">
           ← Back to Course
         </button>
+
+        {/* Course name link */}
+        {courseData && (
+          <div className="lesson-course-link">
+            <Link to={`/course/${courseData.id}`}>{courseData.title}</Link>
+          </div>
+        )}
+
+        {/* Lesson position indicator */}
+        {allLessons.length > 0 && lessonIndex >= 0 && (
+          <span className="lesson-position">
+            Lección {lessonIndex + 1} de {allLessons.length}
+          </span>
+        )}
+
         <h1>{lesson?.title}</h1>
       </div>
 
@@ -230,15 +284,15 @@ function Lesson() {
           </div>
         ) : lesson.lessonType === 'PDF' ? (
           <div className="pdf-container">
-            <iframe 
+            <iframe
               src={streamUrl}
-              width="100%" 
+              width="100%"
               height="800px"
               title={lesson.title}
             />
-            <a 
+            <a
               href={streamUrl}
-              target="_blank" 
+              target="_blank"
               rel="noopener noreferrer"
               className="btn-download"
             >
@@ -285,6 +339,26 @@ function Lesson() {
           </p>
         )}
        </div>
+
+      {/* Previous / Next lesson navigation */}
+      {allLessons.length > 1 && (
+        <div className="lesson-nav">
+          <button
+            className="btn-lesson-nav btn-prev"
+            disabled={!prevLesson}
+            onClick={() => prevLesson && navigate(`/lesson/${prevLesson.id}`)}
+          >
+            ← Anterior
+          </button>
+          <button
+            className="btn-lesson-nav btn-next"
+            disabled={!nextLesson}
+            onClick={() => nextLesson && navigate(`/lesson/${nextLesson.id}`)}
+          >
+            Siguiente →
+          </button>
+        </div>
+      )}
     </div>
   );
 }

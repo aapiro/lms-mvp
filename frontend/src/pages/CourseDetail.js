@@ -2,13 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../api/api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../components/ToastProvider';
 import Assessments from './Assessments';
+import CourseReviews from '../components/domain/CourseReviews';
 import './CourseDetail.css';
 
 function CourseDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { addToast } = useToast();
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(false);
@@ -16,6 +19,7 @@ function CourseDetail() {
 
   useEffect(() => {
     loadCourse();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- loadCourse closes over id; listing it would duplicate [id]
   }, [id]);
 
   useEffect(() => {
@@ -58,7 +62,7 @@ function CourseDetail() {
       const response = await api.post(`/payments/checkout/${id}`);
       window.location.href = response.data.url;
     } catch (err) {
-      alert(err.response?.data?.error || 'Purchase failed');
+      addToast(err.response?.data?.error || 'Purchase failed', { type: 'error' });
       setPurchasing(false);
     }
   };
@@ -69,7 +73,7 @@ function CourseDetail() {
     if (course.purchased || isFree) {
       navigate(`/lesson/${lessonId}`);
     } else {
-      alert('You need to purchase this course first');
+      addToast('You need to purchase this course first', { type: 'error' });
     }
   };
 
@@ -189,6 +193,7 @@ function CourseDetail() {
       <div className="tabs">
         <button className={`tab ${activeTab === 'lessons' ? 'active' : ''}`} onClick={() => handleTabChange('lessons')}>Lessons</button>
         <button className={`tab ${activeTab === 'assessments' ? 'active' : ''}`} onClick={() => handleTabChange('assessments')}>Assessments</button>
+        <button className={`tab ${activeTab === 'reviews' ? 'active' : ''}`} onClick={() => handleTabChange('reviews')}>Reseñas</button>
       </div>
 
       <div className="content-section">
@@ -227,6 +232,12 @@ function CourseDetail() {
           <div className="assessments-section">
             <h2>Assessments</h2>
             <Assessments courseId={course.id} />
+          </div>
+        )}
+
+        {activeTab === 'reviews' && (
+          <div className="lessons-section">
+            <CourseReviews courseId={course.id} userHasPurchased={course.purchased} />
           </div>
         )}
       </div>

@@ -3,22 +3,22 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--color-primary-gradient);
   padding: 20px;
 }
 
 .auth-box {
-  background: white;
+  background: var(--color-surface);
   padding: 40px;
-  border-radius: 10px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
   width: 100%;
   max-width: 400px;
 }
 
 .auth-box h1 {
   margin: 0 0 30px 0;
-  color: #333;
+  color: var(--color-text);
   text-align: center;
 }
 
@@ -29,39 +29,39 @@
 .form-group label {
   display: block;
   margin-bottom: 8px;
-  color: #555;
+  color: var(--color-text-secondary);
   font-weight: 500;
 }
 
 .form-group input {
   width: 100%;
   padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--radius-md);
   font-size: 14px;
   box-sizing: border-box;
 }
 
 .form-group input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--color-primary);
 }
 
 button[type="submit"] {
   width: 100%;
   padding: 12px;
-  background: #667eea;
+  background: var(--color-primary);
   color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: var(--radius-md);
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: background var(--transition-base);
 }
 
 button[type="submit"]:hover:not(:disabled) {
-  background: #5568d3;
+  background: var(--color-primary-hover);
 }
 
 button[type="submit"]:disabled {
@@ -70,10 +70,10 @@ button[type="submit"]:disabled {
 }
 
 .error-message {
-  background: #fee;
-  color: #c33;
+  background: var(--color-danger-light);
+  color: var(--color-danger-text);
   padding: 12px;
-  border-radius: 5px;
+  border-radius: var(--radius-md);
   margin-bottom: 20px;
   text-align: center;
 }
@@ -81,11 +81,11 @@ button[type="submit"]:disabled {
 .auth-link {
   text-align: center;
   margin-top: 20px;
-  color: #666;
+  color: var(--color-text-secondary);
 }
 
 .auth-link a {
-  color: #667eea;
+  color: var(--color-primary);
   text-decoration: none;
   font-weight: 600;
 }
