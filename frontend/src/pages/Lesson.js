@@ -6,10 +6,12 @@ import ConfirmModal from '../components/ConfirmModal';
 import { useToast } from '../components/ToastProvider';
 import { useAuth } from '../context/AuthContext';
 import AiTutor from '../components/domain/AiTutor';
+import { useFeatures } from '../context/FeatureContext';
 
 function Lesson() {
   const toast = useToast();
   const { user } = useAuth();
+  const features = useFeatures();
   const { id } = useParams();
   const navigate = useNavigate();
   const [lesson, setLesson] = useState(null);
@@ -362,7 +364,7 @@ function Lesson() {
       )}
 
       {/* AI Tutor floating chat */}
-      {lesson && lesson.courseId && <AiTutor courseId={lesson.courseId} />}
+      {features.aiTutor && lesson && lesson.courseId && <AiTutor courseId={lesson.courseId} />}
     </div>
   );
 }

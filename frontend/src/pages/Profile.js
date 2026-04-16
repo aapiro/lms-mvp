@@ -8,10 +8,12 @@ import ProfileCourses from './profile/ProfileCourses';
 import ProfileCertificates from './profile/ProfileCertificates';
 import ProfilePassword from './profile/ProfilePassword';
 import GamificationWidget from '../components/domain/GamificationWidget';
+import { useFeatures } from '../context/FeatureContext';
 import './Profile.css';
 
 function Profile() {
   const { user } = useAuth();
+  const features = useFeatures();
   const navigate = useNavigate();
   const { addToast } = useToast();
 
@@ -47,7 +49,7 @@ function Profile() {
     { key: 'info', label: '👤 Mi Información' },
     { key: 'courses', label: '📚 Mis Cursos', badge: profile.enrollments?.length },
     { key: 'certificates', label: '🏆 Certificados', badge: profile.certificates?.length },
-    { key: 'gamification', label: '🎮 Logros y XP' },
+    ...(features.gamification ? [{ key: 'gamification', label: '🎮 Logros y XP' }] : []),
     { key: 'password', label: '🔒 Cambiar Contraseña' },
   ];
 
@@ -93,7 +95,7 @@ function Profile() {
         {activeTab === 'certificates' && (
           <ProfileCertificates certificates={profile.certificates} />
         )}
-        {activeTab === 'gamification' && (
+        {activeTab === 'gamification' && features.gamification && (
           <GamificationWidget />
         )}
         {activeTab === 'password' && (

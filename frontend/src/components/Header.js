@@ -5,11 +5,13 @@ import { useTheme } from '../context/ThemeContext';
 import NotificationBell from './domain/NotificationBell';
 import SearchBar from './domain/SearchBar';
 import { XpBadge } from './domain/GamificationWidget';
+import { useFeatures } from '../context/FeatureContext';
 import './Header.css';
 
 function Header() {
   const { user, logout, isAdmin } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const features = useFeatures();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -33,7 +35,7 @@ function Header() {
       <div className="header-content">
         <Link to="/" className="header-logo">LMS Platform</Link>
 
-        <SearchBar />
+        {features.globalSearch && <SearchBar />}
 
         {/* Hamburger button (mobile only) */}
         <button
@@ -56,8 +58,8 @@ function Header() {
             {theme === 'dark' ? '☀️' : '🌙'}
           </button>
 
-          {user && <XpBadge />}
-          {user && <NotificationBell />}
+          {user && features.gamification && <XpBadge />}
+          {user && features.notifications && <NotificationBell />}
 
           {user ? (
             <div className="user-menu" ref={dropdownRef}>

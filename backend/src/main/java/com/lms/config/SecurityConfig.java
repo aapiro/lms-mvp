@@ -55,6 +55,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/assessments/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/assessments/*/submissions/*").permitAll() // Permitir POST a submissions sin autenticación
                 .requestMatchers(HttpMethod.GET, "/api/search").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/features").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/courses/*/reviews", "/api/courses/*/rating").permitAll()
                 .requestMatchers("/api/notifications/**").authenticated()
                 .requestMatchers("/api/tutor/**").authenticated()

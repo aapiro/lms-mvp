@@ -1,7 +1,9 @@
 package com.lms.courses;
 
+import com.lms.config.FeatureToggleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
@@ -15,9 +17,14 @@ import java.util.stream.Collectors;
 public class SearchController {
 
     private final CourseRepository courseRepository;
+    private final FeatureToggleService featureToggleService;
+
+    private static final Map<String, String> DISABLED = Map.of("error", "Feature deshabilitada por el administrador");
 
     @GetMapping
     public ResponseEntity<?> search(@RequestParam(defaultValue = "") String q) {
+        if (!featureToggleService.isEnabled(FeatureToggleService.KEY_GLOBAL_SEARCH))
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(DISABLED);
         if (q.trim().length() < 2) {
             return ResponseEntity.ok(List.of());
         }

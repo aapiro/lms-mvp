@@ -6,12 +6,14 @@ import { useToast } from '../components/ToastProvider';
 import Assessments from './Assessments';
 import CourseReviews from '../components/domain/CourseReviews';
 import AiTutor from '../components/domain/AiTutor';
+import { useFeatures } from '../context/FeatureContext';
 import './CourseDetail.css';
 
 function CourseDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const features = useFeatures();
   const { addToast } = useToast();
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -194,7 +196,7 @@ function CourseDetail() {
       <div className="tabs">
         <button className={`tab ${activeTab === 'lessons' ? 'active' : ''}`} onClick={() => handleTabChange('lessons')}>Lessons</button>
         <button className={`tab ${activeTab === 'assessments' ? 'active' : ''}`} onClick={() => handleTabChange('assessments')}>Assessments</button>
-        <button className={`tab ${activeTab === 'reviews' ? 'active' : ''}`} onClick={() => handleTabChange('reviews')}>Reseñas</button>
+        {features.reviews && <button className={`tab ${activeTab === 'reviews' ? 'active' : ''}`} onClick={() => handleTabChange('reviews')}>Reseñas</button>}
       </div>
 
       <div className="content-section">
@@ -236,7 +238,7 @@ function CourseDetail() {
           </div>
         )}
 
-        {activeTab === 'reviews' && (
+        {activeTab === 'reviews' && features.reviews && (
           <div className="lessons-section">
             <CourseReviews courseId={course.id} userHasPurchased={course.purchased} />
           </div>
@@ -244,7 +246,7 @@ function CourseDetail() {
       </div>
 
       {/* AI Tutor floating chat */}
-      <AiTutor courseId={course.id} />
+      {features.aiTutor && <AiTutor courseId={course.id} />}
     </div>
   );
 }
