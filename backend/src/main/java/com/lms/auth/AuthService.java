@@ -1,5 +1,6 @@
 package com.lms.auth;
 
+import com.lms.monitoring.SecurityEventService;
 import com.lms.users.User;
 import com.lms.users.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final PasswordResetTokenRepository resetTokenRepository;
+    private final SecurityEventService securityEventService;
     
     @Transactional
     public AuthDto.AuthResponse register(AuthDto.RegisterRequest request) {
@@ -46,9 +48,12 @@ public class AuthService {
                 .orElseThrow(() -> new RuntimeException("Invalid credentials"));
         
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            securityEventService.logLoginFailed(request.getEmail(), null, null);
             throw new RuntimeException("Invalid credentials");
         }
-        
+
+        securityEventService.logLoginSuccess(user.getId(), user.getEmail(), null, null);
+
         // Track last login time
         user.setLastLogin(java.time.LocalDateTime.now());
         userRepository.save(user);

@@ -14,6 +14,7 @@ import AdminRoles from './admin/AdminRoles';
 import AdminModules from './admin/AdminModules';
 import AdminCategories from './admin/AdminCategories';
 import AdminDevConfig from './admin/AdminDevConfig';
+import AdminMonitoring from './admin/AdminMonitoring';
 
 function Admin() {
   const { isAdmin } = useAuth();
@@ -48,6 +49,7 @@ function Admin() {
     { key: 'evaluaciones', label: 'Evaluaciones' },
     { key: 'compras', label: 'Compras' },
     { key: 'usuarios', label: 'Usuarios' },
+    { key: 'monitoreo', label: 'Monitoreo' },
     { key: 'desarrollo', label: 'Desarrollo' },
     { key: 'audit', label: 'Audit Logs' },
     { key: 'students', label: 'Estudiantes' },

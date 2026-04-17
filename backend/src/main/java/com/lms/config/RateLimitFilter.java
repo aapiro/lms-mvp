@@ -7,6 +7,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import com.lms.monitoring.SecurityEventService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -17,6 +19,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 @Component
 public class RateLimitFilter extends OncePerRequestFilter {
+
+    @Autowired(required = false)
+    private SecurityEventService securityEventService;
 
     private static final int LOGIN_MAX_ATTEMPTS = 5;
     private static final int REGISTER_MAX_ATTEMPTS = 3;
@@ -54,6 +59,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
         timestamps.removeIf(ts -> now - ts > WINDOW_MS);
 
         if (timestamps.size() >= maxAttempts) {
+            if (securityEventService != null) {
+                securityEventService.logRateLimited(ip, path);
+            }
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
             objectMapper.writeValue(response.getWriter(),
