@@ -28,30 +28,32 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const response = await api.post('/auth/login', { email, password });
-    const { token, ...userData } = response.data;
-    
+    const { token, refreshToken, ...userData } = response.data;
+
     localStorage.setItem('token', token);
+    if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
-    
+
     return userData;
   };
 
   const register = async (email, password, fullName) => {
     const response = await api.post('/auth/register', { email, password, fullName });
-    const { token, ...userData } = response.data;
-    
+    const { token, refreshToken, ...userData } = response.data;
+
     localStorage.setItem('token', token);
+    if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
-    
+
     return userData;
   };
 
   const logout = () => {
-    // Remove auth data and redirect to home so any UI using auth state will show logged out immediately
     try {
       localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
       localStorage.removeItem('user');
     } catch (e) {
       // ignore

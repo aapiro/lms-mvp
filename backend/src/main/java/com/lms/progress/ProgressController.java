@@ -34,4 +34,15 @@ public class ProgressController {
         int percent = progressService.unmarkLessonCompleted(lessonId, courseId, user);
         return ResponseEntity.ok(Map.of("progressPercentage", percent));
     }
+
+    @PutMapping("/lessons/{lessonId}/position")
+    public ResponseEntity<?> savePosition(
+            @PathVariable Long lessonId,
+            @RequestBody Map<String, Integer> body,
+            @AuthenticationPrincipal User user
+    ) {
+        int seconds = body.getOrDefault("positionSeconds", 0);
+        progressService.savePosition(lessonId, user.getId(), seconds);
+        return ResponseEntity.ok(Map.of("saved", true));
+    }
 }

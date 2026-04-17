@@ -83,4 +83,10 @@ public class MetricsAdminController {
         List<Map<String, Object>> data = metricsService.getUserActivityHeatmap(days);
         return ResponseEntity.ok(data);
     }
+
+    @GetMapping("/business")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, Object>> businessMetrics() {
+        return ResponseEntity.ok(metricsService.getBusinessMetrics());
+    }
 }

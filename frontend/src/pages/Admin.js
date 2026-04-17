@@ -80,6 +80,8 @@ function Admin() {
         return <AdminUsers />;
       case 'compras':
         return <AdminPurchases />;
+      case 'monitoreo':
+        return <AdminMonitoring />;
       case 'audit':
         return <AdminAuditLogs />;
       case 'students':

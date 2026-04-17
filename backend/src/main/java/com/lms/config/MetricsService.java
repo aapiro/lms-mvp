@@ -282,4 +282,61 @@ public class MetricsService {
         }
         return filled;
     }
+
+    // ═══ Business Metrics (Ronda 2) ═══
+
+    public Map<String, Object> getBusinessMetrics() {
+        Map<String, Object> biz = new LinkedHashMap<>();
+
+        // Conversion funnel
+        Integer totalUsers = jdbc.queryForObject("SELECT COUNT(*) FROM users", Integer.class);
+        Integer usersWithPurchases = jdbc.queryForObject(
+                "SELECT COUNT(DISTINCT user_id) FROM purchases WHERE status='COMPLETED'", Integer.class);
+        Integer usersCompleted = jdbc.queryForObject(
+                "SELECT COUNT(DISTINCT p.user_id) FROM progress p " +
+                "JOIN lessons l ON p.lesson_id = l.id " +
+                "WHERE p.completed = true " +
+                "GROUP BY l.course_id, p.user_id " +
+                "HAVING COUNT(p.id) = (SELECT COUNT(*) FROM lessons WHERE course_id = l.course_id) " +
+                "LIMIT 1", Integer.class);
+
+        Map<String, Object> funnel = new LinkedHashMap<>();
+        funnel.put("totalUsers", totalUsers != null ? totalUsers : 0);
+        funnel.put("enrolled", usersWithPurchases != null ? usersWithPurchases : 0);
+        funnel.put("completed", usersCompleted != null ? usersCompleted : 0);
+        biz.put("funnel", funnel);
+
+        // Churn (inactive > 14 days)
+        Integer churned = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM users WHERE last_login < NOW() - INTERVAL '14 days' AND last_login IS NOT NULL",
+                Integer.class);
+        biz.put("churnedUsers14d", churned != null ? churned : 0);
+
+        // ARPU (average revenue per user)
+        BigDecimal totalRevenue = jdbc.queryForObject(
+                "SELECT COALESCE(SUM(amount), 0) FROM purchases WHERE status='COMPLETED'", BigDecimal.class);
+        int payingUsers = usersWithPurchases != null ? usersWithPurchases : 1;
+        biz.put("arpu", totalRevenue != null ? totalRevenue.divide(BigDecimal.valueOf(Math.max(payingUsers, 1)), 2, RoundingMode.HALF_UP) : 0);
+
+        // Feature adoption (if feature toggles exist)
+        try {
+            Integer tutorUsers = jdbc.queryForObject(
+                    "SELECT COUNT(DISTINCT user_id) FROM tutor_conversations", Integer.class);
+            Integer gamificationUsers = jdbc.queryForObject(
+                    "SELECT COUNT(DISTINCT user_id) FROM user_xp", Integer.class);
+            Integer reviewUsers = jdbc.queryForObject(
+                    "SELECT COUNT(DISTINCT user_id) FROM reviews", Integer.class);
+
+            Map<String, Object> adoption = new LinkedHashMap<>();
+            int total = totalUsers != null && totalUsers > 0 ? totalUsers : 1;
+            adoption.put("aiTutor", Map.of("users", tutorUsers != null ? tutorUsers : 0, "percent", Math.round((double)(tutorUsers != null ? tutorUsers : 0) / total * 100)));
+            adoption.put("gamification", Map.of("users", gamificationUsers != null ? gamificationUsers : 0, "percent", Math.round((double)(gamificationUsers != null ? gamificationUsers : 0) / total * 100)));
+            adoption.put("reviews", Map.of("users", reviewUsers != null ? reviewUsers : 0, "percent", Math.round((double)(reviewUsers != null ? reviewUsers : 0) / total * 100)));
+            biz.put("featureAdoption", adoption);
+        } catch (Exception e) {
+            // Tables may not exist yet
+        }
+
+        return biz;
+    }
 }

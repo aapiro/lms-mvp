@@ -1,530 +1,342 @@
-# LMS Platform - Learning Management System MVP
+# LMS Platform - Learning Management System
 
 ![LMS Overview](./img.png)
 
-Sistema completo de gestión de aprendizaje (LMS) estilo Pluralsight para cursos online con compras integradas vía Stripe.
+Plataforma completa de gestión de aprendizaje estilo Pluralsight/Udemy con AI Tutor, gamificación, pagos Stripe, dark mode y panel administrativo con monitoreo en tiempo real.
 
 ![LMS Demo 2](./img_1.png)
 
 ![LMS Demo 3](./img_2.png)
 
-## 🏗️ Arquitectura
+## Arquitectura
 
 ```
-┌─────────────┐
-│  React SPA  │ (Puerto 3000)
-└──────┬──────┘
-       │
-       v
-┌─────────────┐
-│ Spring Boot │ (Puerto 8080)
-│     API     │
-└──────┬──────┘
-       │
-       ├──────> PostgreSQL (Puerto 5432)
-       │
-       ├──────> MinIO (Puerto 9000)
-       │
-       └──────> Stripe API
+┌──────────────────┐
+│   React 18 SPA   │ (Puerto 3000)
+│  + PWA + Dark Mode│
+└────────┬─────────┘
+         │
+         v
+┌──────────────────┐
+│  Spring Boot 3.2  │ (Puerto 8080)
+│   REST API + JWT  │
+│  + Actuator       │
+└────────┬─────────┘
+         │
+         ├──────> PostgreSQL 15 (Puerto 5432)
+         ├──────> MinIO S3 (Puerto 9000)
+         ├──────> Stripe API (pagos)
+         └──────> Claude API (AI Tutor + Grading)
 ```
 
-## ✨ Funcionalidades
+## Funcionalidades
 
-### Usuarios
-- ✅ Registro y login con JWT
-- ✅ Roles: USER y ADMIN
-- ✅ Sesión persistente
+### Core
+- Registro/login con JWT (access token 15min + refresh token 7 días)
+- Roles: STUDENT, INSTRUCTOR, ADMIN
+- Password reset via email con token temporal
+- Rate limiting en login/register (5/3 req por minuto por IP)
+- CORS configurable por entorno
 
-### Cursos
-- ✅ Listado de cursos disponibles
-- ✅ Detalle de curso con lecciones
-- ✅ Compra mediante Stripe Checkout
-- ✅ Acceso solo a cursos comprados
+### Cursos y Lecciones
+- Catálogo con filtros (categoría, tag, tipo de inscripción)
+- Tipos de inscripción: OPEN, INVITE_ONLY, PAID
+- Capacidad límite por curso
+- Prerrequisitos entre cursos
+- Módulos para organizar lecciones
+- Soporte VIDEO (MP4 + Plyr player), PDF, AUDIO
+- Drip content (lecciones que se liberan por fecha o días)
+- Progreso por lección con % de completitud
+- Video resume: continúa donde lo dejaste (guarda posición cada 15s)
+- Navegación anterior/siguiente entre lecciones
 
-### Lecciones
-- ✅ Soporte para videos (MP4)
-- ✅ Soporte para PDFs
-- ✅ URLs firmadas con MinIO (expiración 60 min)
-- ✅ Reproductor HTML5 nativo
-- ✅ Visualizador de PDFs
+### AI (Claude Sonnet)
+- **AI Tutor**: chat flotante en cada curso, conoce el contenido del curso, modo socrático
+- **AI Grading**: calificación automática de preguntas abiertas
+- **Resúmenes AI**: genera bullet points y conceptos clave por lección (cacheados en DB)
 
-### Progreso
-- ✅ Marcar lecciones como completadas
-- ✅ Cálculo de % de progreso por curso
-- ✅ Indicadores visuales de completitud
+### Gamificación
+- XP por: lección completada (+25), evaluación (+50), curso completado (+200), reseña (+15), login diario (+5)
+- Streaks con bonus a 7 y 30 días
+- Badges automáticos (milestones XP, niveles, rachas)
+- Leaderboard semanal y general
+- Niveles 1-10 con barra de progreso
 
-### Panel Admin
-- ✅ Crear/editar/eliminar cursos
-- ✅ Subir lecciones (video/PDF)
-- ✅ Gestión completa de contenido
+### Evaluaciones
+- Quizzes con preguntas múltiple opción y abiertas
+- Auto-grading para múltiple opción
+- AI grading para preguntas abiertas (configurable)
+- Submissions con estado: IN_PROGRESS, SUBMITTED, GRADED
 
-## 🚀 Instalación y Ejecución
+### Pagos (Stripe)
+- Stripe Checkout con webhook
+- Bypass de pago en modo desarrollo (dev_payments)
+- Cupones de descuento (código, %, máx usos, expiración)
+- Historial de compras en admin
+
+### Social
+- Reseñas y ratings (1-5 estrellas) por curso
+- Promedio de rating visible en catálogo
+- Solo usuarios inscritos pueden reseñar
+
+### Notificaciones
+- Notificaciones in-app (campana con badge)
+- Tipos: inscripción, badge ganado, curso completado
+- Marcar como leída individual o todas
+- Polling cada 60 segundos
+
+### Waitlist y Grupos
+- Lista de espera cuando un curso alcanza capacidad máxima
+- Grupos de usuarios (bootcamps, empresas)
+- Inscripción masiva por grupo
+- Admin CRUD de grupos y miembros
+
+### Panel Administrativo
+- Dashboard de métricas (KPIs, gráficas de ingresos, inscripciones, heatmap de actividad)
+- Business metrics (funnel de conversión, churn, ARPU, feature adoption)
+- Monitoreo del sistema (JVM, DB, servicios, uptime)
+- Rendimiento por endpoint (avg/max response time, semáforo)
+- Seguridad (login attempts, rate limits, IPs sospechosas)
+- Sesiones activas en tiempo real (usuarios online, dispositivos)
+- Error tracking y log viewer
+- Alertas configurables (error rate, response time, heap, logins fallidos)
+- Feature toggles (habilitar/deshabilitar funcionalidades en runtime)
+- Gestión de cursos, lecciones, módulos, categorías, tags
+- Gestión de usuarios, estudiantes, instructores, roles
+- Audit logs de acciones administrativas
+- Cupones CRUD
+
+### Frontend
+- Dark mode con toggle (respeta prefers-color-scheme)
+- Responsive design (móvil, tablet, desktop)
+- Header con: búsqueda global, notificaciones, XP badge, user menu dropdown, hamburger menu
+- Dashboard del estudiante (cursos en progreso, sugerencias, stats)
+- Code splitting (React.lazy para Admin, Profile, Dashboard)
+- Error boundaries
+- Design system con CSS custom properties (variables.css)
+- Componentes reutilizables (Button, Modal, FormField, Badge, Pagination, EmptyState, LoadingSkeleton)
+
+## Instalación
 
 ### Prerequisitos
 - Docker y Docker Compose
 - Cuenta de Stripe (modo test)
 
-### 1. Clonar el repositorio
+### 1. Clonar y levantar
 ```bash
 git clone <repo-url>
 cd lms-mvp
-```
-
-### 2. Configurar variables de entorno
-
-#### Backend
-Editar `docker-compose.yml` y actualizar:
-```yaml
-STRIPE_SECRET_KEY: sk_test_tu_clave_secreta
-STRIPE_WEBHOOK_SECRET: whsec_tu_webhook_secret
-```
-
-#### Frontend
-Crear archivo `.env` en `/frontend`:
-```bash
-REACT_APP_API_URL=http://localhost:8080/api
-REACT_APP_STRIPE_PUBLIC_KEY=pk_test_tu_clave_publica
-```
-
-### 3. Levantar todo el sistema
-```bash
 docker compose up --build
 ```
 
-Puedes usar este otro comando cuando quieras reiniciar todo y limpiar volúmenes (inicio totalmente limpio):
+### 2. Acceder
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8080
+- **MinIO Console**: http://localhost:9001
+- **Actuator Health**: http://localhost:8080/actuator/health
 
+### 3. Credenciales de prueba
+
+| Email | Password | Rol | Descripción |
+|-------|----------|-----|-------------|
+| `admin@lms.com` | `admin123` | ADMIN | Administrador principal |
+| `test@example.com` | `Password123` | USER | Usuario de prueba |
+| `carlos.mendez@demo.com` | `demo1234` | STUDENT | Estudiante activo (115 XP, 2 cursos) |
+| `maria.garcia@demo.com` | `demo1234` | STUDENT | Estudiante (65 XP, 2 cursos) |
+| `pedro.lopez@demo.com` | `demo1234` | STUDENT | Estudiante nuevo |
+| `prof.rodriguez@demo.com` | `demo1234` | INSTRUCTOR | Instructor (React, Intro) |
+| `prof.castillo@demo.com` | `demo1234` | INSTRUCTOR | Instructora (Python, Figma) |
+| `prof.moreno@demo.com` | `demo1234` | INSTRUCTOR | Instructor (Arquitectura, DevOps, SQL) |
+
+Cupones demo: `BIENVENIDO20` (20%), `DESCUENTO50` (50%), `GRATIS100` (100%)
+
+### Reinicio limpio
 ```bash
 docker-compose down -v && docker-compose up --build -d
 ```
 
-Esto levantará:
-- **PostgreSQL** en `localhost:5432`
-- **MinIO** en `localhost:9000` (consola en `localhost:9001`)
-- **Backend API** en `localhost:8080`
-- **Frontend** en `localhost:3000`
-- **minio-init** *(servicio de inicialización, se ejecuta una vez y termina)*
+## Variables de Entorno
 
-> **📁 Archivos de media demo**
-> El servicio `minio-init` sube automáticamente los archivos de prueba al bucket de MinIO en cada arranque. Los archivos deben existir en:
-> ```
-> media-resources/
-> ├── sample-mp4-files-sample_960x540.mp4   ← video de ejemplo
-> └── sample-pdf-file.pdf                   ← PDF de ejemplo
-> ```
-> No necesitas hacer nada manualmente. Las migraciones de Flyway (V14, V15) ya apuntan las lecciones demo a `demo/sample.mp4` y `demo/sample.pdf` en MinIO.
+### Backend
+| Variable | Default | Descripción |
+|----------|---------|-------------|
+| `SPRING_DATASOURCE_URL` | — | URL JDBC de PostgreSQL |
+| `JWT_SECRET` | dev secret | Secreto JWT (32+ chars) |
+| `STRIPE_SECRET_KEY` | — | Clave secreta de Stripe |
+| `STRIPE_WEBHOOK_SECRET` | — | Webhook secret de Stripe |
+| `MINIO_ENDPOINT` | — | URL de MinIO |
+| `CORS_ALLOWED_ORIGINS` | `http://localhost:3000` | Origins permitidos (comma-separated) |
+| `MAIL_ENABLED` | `false` | Habilitar envío de emails |
+| `MAIL_HOST` | `smtp.gmail.com` | Servidor SMTP |
+| `MAIL_USERNAME` | — | Usuario SMTP |
+| `MAIL_PASSWORD` | — | Password SMTP |
+| `AI_TUTOR_ENABLED` | `false` | Habilitar AI Tutor |
+| `AI_TUTOR_API_KEY` | — | API key de Anthropic |
+| `AI_TUTOR_MODEL` | `claude-sonnet-4-20250514` | Modelo de Claude |
+| `AI_GRADING_ENABLED` | `false` | Habilitar AI Grading |
 
-### 4. Acceder a la aplicacin
+### Frontend
+| Variable | Default | Descripción |
+|----------|---------|-------------|
+| `REACT_APP_API_URL` | `http://localhost:8080/api` | URL del backend |
+| `REACT_APP_STRIPE_PUBLIC_KEY` | — | Clave pública de Stripe |
 
-Abrir navegador en: **http://localhost:3000**
-
-**Credenciales seeded (migraciones)**:
-
-- Admin (V2):
-  - Email: `admin@lms.com`
-  - Password: `admin123` (hash incluido en la migraci?n V2)
-  - Role: ADMIN
-
-- Test user (V3):
-  - Email: `test@example.com`
-  - Password: `Password123` (hash incluido en la migraci?n V3)
-  - Role: USER
-
-- Dev user (V10):
-  - Email: `dev@lms.local`
-  - Role: ADMIN
-  - Nota: la migraci?n crea este usuario pero NO establece un hash de contraseña (`<no-password-hash>`). Si quieres iniciar sesi?n con `dev@lms.local`, asigna una contraseña manualmente (ejemplo usando el mismo hash de `admin123`):
-
-```bash
-# Reemplaza el hash por el que prefieras; este es el hash usado en V2 para 'admin123'
-docker-compose exec -T postgres psql -U lmsuser -d lmsdb -c "UPDATE users SET password = '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy' WHERE email = 'dev@lms.local';"
-```
-
-- Demo users (V11):
-  - `alice@lms.local` (STUDENT) — no password set in seed (`<no-password-hash>`)
-  - `bob@lms.local` (STUDENT) — no password set in seed
-  - `instructor@lms.local` (INSTRUCTOR) — no password set in seed
-
-- QA user (V12):
-  - `qa@lms.local` (STUDENT) — no password set in seed
-
-> Nota: Para usuarios que no tengan contrase?a en las migraciones puedes:
-> - asignar un hash de BCrypt manualmente en la BD (ejemplo arriba), o
-> - eliminar el usuario y registrarlo de nuevo via API (`/api/auth/register`) para crear una cuenta con contrase?a conocida.
-
-> Si necesitas convertir un usuario a ADMIN puedes ejecutar (ejemplo):
-
-```bash
-# Promover un usuario a ADMIN (usar con precauci?n)
-docker-compose exec -T postgres psql -U lmsuser -d lmsdb -c "UPDATE users SET role='ADMIN' WHERE email='test@example.com';"
-```
-
-> Si por alg?n motivo la migraci?n no crea `test@example.com`, puedes registrarlo manualmente con:
-
-```bash
-curl -s -X POST http://localhost:8080/api/auth/register \
-  -H 'Content-Type: application/json' \
-  -d '{"fullName":"Test User","email":"test@example.com","password":"Password123"}' | jq
-```
-
-## Tests E2E (Playwright)
-
-Prerrequisito: stack en marcha (`docker compose up --build`) con frontend en el puerto **3000** y API en **8080** (valores por defecto del `docker-compose`).
-
-```bash
-cd e2e
-npm ci
-npx playwright install chromium   # primera vez, o: npx playwright install --with-deps (CI/Linux)
-npm test
-```
-
-### Variables de entorno
-
-| Variable | Default | Uso |
-|----------|---------|-----|
-| `PLAYWRIGHT_BASE_URL` | `http://localhost:3000` | URL del frontend |
-| `PLAYWRIGHT_API_URL` | `http://localhost:8080/api` | Base URL de la API (debe ser la misma instancia que usa el navegador vía `REACT_APP_API_URL`) |
-| `PLAYWRIGHT_READY_TIMEOUT_MS` | `120000` | Espera en `global-setup` antes de fallar |
-| `E2E_ADMIN_EMAIL` | `admin@lms.com` | Admin para tests que lo requieren |
-| `E2E_ADMIN_PASSWORD` | `admin123` | Contraseña del admin (sembrada en migración V2) |
-| `E2E_USER_EMAIL` | `test@example.com` | Usuario normal (sembrado en V3) |
-| `E2E_USER_PASSWORD` | `Password123` | Contraseña del usuario de prueba |
-
-No ejecutar esta suite contra producción con credenciales de desarrollo.
-
-### Si falla el login E2E (`Invalid credentials`)
-
-1. Comprueba que la API sea la correcta y que el login funcione **desde la misma máquina** que ejecuta Playwright:
-
-```bash
-curl -s -X POST "${PLAYWRIGHT_API_URL:-http://localhost:8080/api}/auth/login" \
-  -H 'Content-Type: application/json' \
-  -d "{\"email\":\"${E2E_ADMIN_EMAIL:-admin@lms.com}\",\"password\":\"${E2E_ADMIN_PASSWORD:-admin123}\"}"
-```
-
-Debe responder JSON con `token`. Si no, el problema es BD o credenciales (por ejemplo migraciones sin aplicar o volumen antiguo). Tras actualizar el repo, **reinicia el backend** para que Flyway aplique las migraciones en `backend/src/main/resources/db/migration_clean` (incluye `V27__ensure_seeded_demo_passwords.sql`, que vuelve a alinear las contraseñas de `admin@lms.com` y `test@example.com` con el README).
-
-Con **`SPRING_PROFILES_ACTIVE=dev`** (modo desarrollo del `docker-compose.override.yml`), al arrancar el backend se vuelven a codificar con BCrypt esas dos contraseñas para que coincidan siempre con el login; vuelve a lanzar el contenedor backend y espera a ver `Started LmsApplication` antes de ejecutar Playwright.
-
-Si sigue fallando, prueba un reset limpio: `docker compose down -v` y vuelve a levantar el stack.
-
-2. Si el `curl` devuelve `token` pero los tests siguen fallando, alinea `PLAYWRIGHT_API_URL` con la URL que usaste en el `curl`.
-
-Informe HTML local tras un fallo: `npx playwright show-report` (desde `e2e/`).
-
-## 📁 Estructura del Proyecto
+## Estructura del Proyecto
 
 ```
 lms-mvp/
-├── backend/
-│   ├── src/main/java/com/lms/
-│   │   ├── auth/          # Autenticación y JWT
-│   │   ├── users/         # Usuarios
-│   │   ├── courses/       # Cursos
-│   │   ├── lessons/       # Lecciones
-│   │   ├── payments/      # Stripe + Compras
-│   │   ├── progress/      # Progreso de usuario
-│   │   ├── storage/       # MinIO client
-│   │   └── config/        # Configuración Spring
-│   ├── src/main/resources/
-│   │   └── db/migration_clean/  # Migraciones Flyway (activas; ver application.properties)
-│   ├── pom.xml
-│   └── Dockerfile
+├── backend/src/main/java/com/lms/
+│   ├── auth/           # JWT, login, register, refresh, password reset
+│   ├── users/          # Usuarios, grupos, roles
+│   ├── courses/        # Cursos, admin, búsqueda, dashboard
+│   ├── lessons/        # Lecciones, streaming
+│   ├── payments/       # Stripe, compras, cupones
+│   ├── progress/       # Progreso, video position
+│   ├── assessments/    # Evaluaciones, AI grading
+│   ├── enrollments/    # Waitlist
+│   ├── reviews/        # Reseñas y ratings
+│   ├── notifications/  # Notificaciones in-app
+│   ├── gamification/   # XP, badges, streaks, leaderboard
+│   ├── ai/             # AI Tutor, resúmenes, chat
+│   ├── monitoring/     # Request metrics, security events, sessions, alerts
+│   ├── email/          # Email service (SMTP)
+��   ├── config/         # Security, feature toggles, audit, metrics
+│   └── storage/        # MinIO integration
 │
-├── frontend/
-│   ├── src/
-│   │   ├── api/           # Cliente Axios
-│   │   ├── context/       # AuthContext
-│   │   ├── pages/         # Componentes principales
-│   │   │   ├── Login.js
-│   │   │   ├── Register.js
-│   │   │   ├── Home.js
-│   │   │   ├── CourseDetail.js
-│   │   │   ├── Lesson.js
-│   │   │   └── Admin.js
-│   │   └── App.js
-│   ├── package.json
-│   └── Dockerfile
+├── backend/src/main/resources/
+│   └── db/migration_clean/   # 38 migraciones Flyway (V1-V38)
 │
-├── e2e/                   # Tests E2E (Playwright)
-│   ├── tests/
-│   ├── helpers/
-│   ├── playwright.config.ts
-│   └── package.json
+├── frontend/src/
+│   ├── api/            # Axios client + refresh token interceptor
+│   ├── context/        # AuthContext, ThemeContext, FeatureContext
+│   ├── hooks/          # useApi, usePagination, useForm
+│   ├── components/
+│   │   ├── common/     # Button, Modal, FormField, Badge, Pagination, EmptyState, LoadingSkeleton, ErrorBoundary
+│   │   ├── domain/     # AiTutor, NotificationBell, SearchBar, CourseReviews, GamificationWidget
+│   │   └── Header.js   # UserMenu dropdown, hamburger, search, notifications, XP badge, dark mode toggle
+│   ├── pages/
+│   │   ├── admin/      # 12 sub-páginas (Courses, Users, Students, Monitoring, etc.)
+│   │   ├── profile/    # 4 sub-componentes (Info, Courses, Certificates, Password)
+│   │   ├── assessments/# CreateAssessment, TakeAssessment
+│   │   ├── Dashboard.js, Home.js, CourseDetail.js, Lesson.js, Login.js, Register.js
+│   │   ├── ForgotPassword.js, ResetPassword.js
+│   │   └── Profile.js, Admin.js
+│   └── styles/         # variables.css (design tokens + dark theme)
 │
-└── docker-compose.yml
+├── e2e/                # Playwright E2E tests + BDD infrastructure
+├── features/           # Gherkin feature files (BDD)
+├── docs/               # SDD, CDD, Plan de Acción
+├── docker-compose.yml
+├── docker-compose.prod.yml
+└── .env.prod.example
 ```
 
-## 🔄 Flujo de Compra
+## API Endpoints (resumen)
 
-1. Usuario navega a un curso
-2. Click en "Purchase Course"
-3. Redirección a Stripe Checkout
-4. Usuario completa pago
-5. Stripe envía webhook a `/api/payments/webhook`
-6. Backend registra compra en BD
-7. Usuario obtiene acceso al contenido
+### Públicos
+```
+POST   /api/auth/register, /login, /refresh, /forgot-password, /reset-password
+GET    /api/courses, /api/courses/{id}
+GET    /api/courses/categories, /api/courses/tags
+GET    /api/search?q={term}
+GET    /api/features
+GET    /api/courses/{id}/reviews, /api/courses/{id}/rating
+GET    /api/gamification/leaderboard
+GET    /actuator/health
+```
 
-## 🔑 Configuración de Stripe Webhooks
+### Autenticados
+```
+GET    /api/users/me
+PUT    /api/users/me, /api/users/me/password
+GET    /api/dashboard
+GET    /api/notifications, /api/notifications/unread-count
+PUT    /api/notifications/{id}/read, /api/notifications/read-all
+GET    /api/gamification/stats, /api/gamification/xp/recent
+POST   /api/gamification/daily-login
+GET    /api/tutor/courses/{id}/conversation
+POST   /api/tutor/conversations/{id}/message
+POST   /api/courses/{id}/reviews
+POST   /api/courses/{id}/waitlist
+POST   /api/payments/checkout/{courseId}
+POST   /api/coupons/validate
+POST   /api/progress/lessons/{id}/complete
+PUT    /api/progress/lessons/{id}/position
+GET    /api/lessons/{id}/summary
+```
 
-### Desarrollo Local (usar Stripe CLI)
+### Admin
+```
+/api/admin/courses, /lessons, /users, /students, /instructors
+/api/admin/purchases, /audit, /dev, /groups
+/api/admin/categories, /tags, /modules
+/api/admin/management/users/{id}/role, /active
+/api/admin/management/certificates/{userId}/{courseId}
+/api/admin/monitoring/dashboard, /health, /jvm, /performance, /security, /sessions, /errors
+/api/admin/alerts/rules, /history, /check
+/api/admin/metrics/summary, /sales-timeseries, /enrollments-timeseries, /top-courses, /business
+/api/admin/coupons, /reviews/{id}
+```
+
+## Tests
+
+### E2E (Playwright)
 ```bash
-stripe listen --forward-to localhost:8080/api/payments/webhook
+cd e2e
+npm ci
+npx playwright install chromium
+npm test
 ```
 
-Esto te dará un `webhook secret` que debes poner en `STRIPE_WEBHOOK_SECRET`.
-
-### Producción
-Configurar webhook en Stripe Dashboard apuntando a:
-```
-https://tu-dominio.com/api/payments/webhook
-```
-
-Evento a escuchar: `checkout.session.completed`
-
-## 📊 Base de Datos
-
-### Migraciones
-Se ejecutan automáticamente con Flyway al iniciar el backend.
-
-### Schema
-- **users**: Usuarios con roles
-- **courses**: Cursos con precio
-- **lessons**: Lecciones (VIDEO/PDF)
-- **purchases**: Registro de compras
-- **progress**: Progreso de lecciones
-
-## 🎯 Endpoints API Principales
-
-### Autenticación
-```
-POST /api/auth/register
-POST /api/auth/login
-```
-
-### Cursos (públicos)
-```
-GET  /api/courses
-GET  /api/courses/{id}
-```
-
-### Lecciones (autenticado)
-```
-GET  /api/lessons/{id}  # Retorna URL firmada
-```
-
-### Pagos (autenticado)
-```
-POST /api/payments/checkout/{courseId}
-POST /api/payments/webhook  # Stripe webhook
-```
-
-### Admin (solo ADMIN)
-```
-POST   /api/admin/courses
-PUT    /api/admin/courses/{id}
-DELETE /api/admin/courses/{id}
-POST   /api/admin/courses/{courseId}/lessons
-DELETE /api/admin/lessons/{id}
-```
-
-### Progreso (autenticado)
-```
-POST /api/progress/lessons/{lessonId}/complete
-```
-
-## 🔒 Seguridad
-
-- JWT con expiración de 24h
-- Contraseñas hasheadas con BCrypt
-- CORS configurado para frontend
-- URLs de MinIO firmadas con expiración
-- Validación de propiedad de curso antes de acceso
-
-## 📦 Almacenamiento (MinIO)
-
-### Acceder a consola de MinIO
-```
-URL: http://localhost:9001
-Usuario: minioadmin
-Password: minioadmin123
-```
-
-### Estructura de buckets
-```
-lms-content/
-├── videos/
-│   └── {uuid}_{filename}.mp4
-└── pdfs/
-    └── {uuid}_{filename}.pdf
-```
-
-## 🛠️ Decisiones Técnicas
-
-### Backend
-- **Monolito**: Más simple de desplegar y mantener
-- **JWT propio**: Evita dependencia de Keycloak
-- **Flyway**: Migraciones versionadas automáticas
-- **MinIO**: S3-compatible, self-hosted
-- **Stripe Checkout**: Simplifica flujo de pago
-
-### Frontend
-- **React hooks**: Código funcional y moderno
-- **Context API**: Estado global sin Redux
-- **Axios interceptors**: Manejo automático de auth
-- **HTML5 video**: Reproductor nativo, sin deps
-
-### Infraestructura
-- **Docker Compose**: Orquestación simple
-- **Todo local**: No depende de cloud
-- **Nginx reverse proxy**: Servir frontend + proxy API
-
-## 🚨 Limitaciones Conocidas (MVP)
-
-- Sin paginación de cursos
-- Sin búsqueda/filtros
-- Sin sistema de comentarios
-- Sin certificados
-- Sin notificaciones email
-- Sin analytics
-- Sin transcoding de videos
-- Sin CDN
-
-## 🔧 Desarrollo
-
-### Ejecutar backend solo
+### Backend BDD (Cucumber + TestContainers)
 ```bash
 cd backend
-mvn spring-boot:run
+mvn test
+# Reporte HTML: target/cucumber-report.html
 ```
 
-### Ejecutar frontend solo
+### Frontend (Jest + React Testing Library)
 ```bash
 cd frontend
-npm install
-npm start
+npm test -- --ci --watchAll=false
 ```
 
-### Hot reload / Desarrollo rápido (recomendado)
-A continuación hay opciones para ver cambios inmediatamente (hot-reload) según tu flujo de trabajo.
+### CI/CD
+GitHub Actions ejecuta 3 jobs en paralelo:
+1. `backend-tests` — Maven + TestContainers (~3 min)
+2. `frontend-tests` — Jest (~2 min)
+3. `e2e` — Docker Compose + Playwright (~8 min)
 
-1) Desarrollo local (recomendado)
-- Ejecuta los servicios de infraestructura y backend con Docker (Postgres, MinIO y Backend) y corre el frontend en tu máquina con hot-reload:
+## Producción
 
 ```bash
-# Desde la raíz del proyecto levanta infra + backend
-docker compose up -d postgres minio backend
+# Copiar y configurar variables
+cp .env.prod.example .env.prod
 
-# En otra terminal, ejecuta el frontend en modo desarrollo (hot-reload)
-cd frontend
-npm install
-npm start
+# Levantar con overrides de producción
+docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod up -d
 ```
 
-- Abre: http://localhost:3000
-- Ventaja: hot-reload de React; los cambios en `frontend/src/` se reflejan al instante.
+Incluye: health checks, restart policies, memory limits, sin hot reload.
 
-2) Desarrollo dentro de Docker (frontend con hot-reload)
-- Si prefieres ejecutar todo dentro de contenedores, crea un archivo `docker-compose.dev.yml` (junto al `docker-compose.yml`) con un override para el servicio `frontend` que monte tu código y ejecute `npm start`:
+## Stack Técnico
 
-```yaml
-# docker-compose.dev.yml (ejemplo)
-version: '3.8'
-services:
-  frontend:
-    image: node:18-alpine
-    working_dir: /app
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    ports:
-      - "3000:3000"
-    command: ["/bin/sh","-c","npm install --no-audit --no-fund && npm start"]
-    environment:
-      - REACT_APP_API_URL=http://host.docker.internal:8080/api
-```
+| Capa | Tecnología |
+|------|-----------|
+| Backend | Java 17, Spring Boot 3.2.1, Spring Security, JPA/Hibernate |
+| Frontend | React 18, React Router 6, Axios, Chart.js, Plyr |
+| Base de datos | PostgreSQL 15, Flyway (38 migraciones) |
+| Storage | MinIO (S3-compatible) |
+| Pagos | Stripe Checkout + Webhooks |
+| AI | Claude Sonnet (Anthropic API) |
+| Auth | JWT (access + refresh tokens), BCrypt |
+| Tests | Cucumber 7.15, TestContainers, Jest, React Testing Library, Playwright |
+| CI/CD | GitHub Actions |
+| Infraestructura | Docker Compose |
 
-- Levanta con:
-```bash
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
-```
-- Nota: en macOS `host.docker.internal` permite que el contenedor frontend acceda al backend que corre en el host o en otro contenedor; ajusta la URL de `REACT_APP_API_URL` según tu red.
+## Licencia
 
-3) Desarrollo rápido para solo reconstruir el build estático (cuando usas nginx)
-- Si estás usando la configuración por defecto que construye el frontend y lo sirve con nginx (producción / staging local), necesitas reconstruir la imagen cuando cambias archivos del frontend:
-
-```bash
-# Reconstruir y levantar todo (útil tras cambios en frontend o backend)
-docker compose up -d --build
-```
-
-- Si solo quieres reconstruir el frontend:
-```bash
-docker compose build frontend
-docker compose up -d frontend
-```
-
-### Ver logs
-```bash
-docker compose logs -f backend
-docker compose logs -f frontend
-```
-
-### Detener todo
-```bash
-docker compose down
-```
-
-### Limpiar volúmenes
-```bash
-docker compose down -v
-```
-
-## 📝 Próximos Pasos (Post-MVP)
-
-1. Paginación y búsqueda de cursos
-2. Sistema de ratings y reviews
-3. Notificaciones por email
-4. Soporte para quizzes
-5. Certificados de completitud
-6. Dashboard de analytics
-7. Transcoding automático de videos
-8. Subtítulos para videos
-
-## 🤝 Contribuir
-
-Este es un MVP educativo. Pull requests son bienvenidos.
-
----
-
-**Creado por**: Un simple desarrollador de software
-**Stack**: Java 17 + Spring Boot 3 + React 18 + PostgreSQL 15 + MinIO + Stripe
-
-## Capturas headless (Playwright)
-
-He incluido un pequeño script para tomar capturas headless de lecciones utilizando Playwright (Chromium). Esto es útil para pruebas visuales o para generar previews sin abrir un navegador manualmente.
-
-1) Instalar dependencias (desde la raíz del proyecto):
-
-```bash
-cd /Users/usuario/Downloads/lms-mvp
-npm init -y
-npm i -D playwright
-npx playwright install chromium
-```
-
-2) Ejecutar el script (ejemplo para la lección 22):
-
-```bash
-node scripts/playwright-screenshot.js 22 lesson-22
-```
-
-- El script guardará archivos: `lesson-22-full.png` (captura de la página completa) y `lesson-22-player.png` (recorte del reproductor si es posible).
-- Asegúrate de que `docker compose up` esté corriendo antes de ejecutar el script.
-
-## ⚖️ Licencia y Uso Comercial
-
-Este proyecto está bajo la licencia **Business Source License 1.1 (BSL)**.
-
-- **Para particulares, ONGs y Pequeñas Empresas:** El uso es totalmente gratuito (incluyendo uso comercial si facturas menos de $1M USD/año).
-- **Para Grandes Empresas:** Si tu organización supera los límites de la BSL, necesitas una licencia comercial para usar este software en producción.
-- **Compromiso Open Source:** En la "Change Date" (1 de enero de 2029), este código pasará automáticamente a ser **Apache 2.0**.
+**Business Source License 1.1 (BSL)**
+- Gratis para organizaciones con menos de $1M USD/año de facturación
+- Licencia comercial requerida para grandes empresas
+- Pasa automáticamente a **Apache 2.0** el 1 de enero de 2029

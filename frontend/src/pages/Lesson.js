@@ -23,6 +23,9 @@ function Lesson() {
   const videoElRef = useRef(null);
   const [videoSrc, setVideoSrc] = useState('');
   const [showUnmarkConfirm, setShowUnmarkConfirm] = useState(false);
+  const [summary, setSummary] = useState(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const positionSaveRef = useRef(null);
 
   // Course data for lesson navigation
   const [courseData, setCourseData] = useState(null);
@@ -48,7 +51,13 @@ function Lesson() {
 
         // wire events
         videoEl.addEventListener('play', () => setIsPlaying(true));
-        videoEl.addEventListener('pause', () => setIsPlaying(false));
+        videoEl.addEventListener('pause', () => {
+          setIsPlaying(false);
+          // Save position on pause
+          if (user && videoEl.currentTime > 0) {
+            api.put(`/progress/lessons/${id}/position`, { positionSeconds: Math.floor(videoEl.currentTime) }).catch(() => {});
+          }
+        });
         videoEl.addEventListener('error', (e) => {
           console.error('Video playback error', e);
           setIsPlaying(false);
@@ -162,8 +171,26 @@ function Lesson() {
       }
 
       setLesson(lessonData);
-      // Usar streaming endpoint para VIDEO (soporta Range requests / Plyr)
       setVideoSrc(streamUrl);
+
+      // Resume video position if available
+      if (lessonData.lastPositionSeconds && lessonData.lastPositionSeconds > 0 && lessonData.lessonType === 'VIDEO') {
+        setTimeout(() => {
+          const vid = document.querySelector('.video-container video');
+          if (vid) vid.currentTime = lessonData.lastPositionSeconds;
+        }, 500);
+      }
+
+      // Start position save interval for video
+      if (lessonData.lessonType === 'VIDEO' && user) {
+        clearInterval(positionSaveRef.current);
+        positionSaveRef.current = setInterval(() => {
+          const vid = document.querySelector('.video-container video');
+          if (vid && !vid.paused && vid.currentTime > 0) {
+            api.put(`/progress/lessons/${id}/position`, { positionSeconds: Math.floor(vid.currentTime) }).catch(() => {});
+          }
+        }, 15000);
+      }
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to load lesson');
     } finally {
@@ -219,6 +246,20 @@ function Lesson() {
     } finally {
       setShowUnmarkConfirm(false);
     }
+  };
+
+  // Cleanup position save interval on unmount
+  useEffect(() => {
+    return () => { clearInterval(positionSaveRef.current); };
+  }, []);
+
+  const loadSummary = async () => {
+    setSummaryLoading(true);
+    try {
+      const res = await api.get(`/lessons/${id}/summary`);
+      setSummary(res.data);
+    } catch { setSummary({ summary: 'No se pudo generar el resumen.', keyConcepts: '' }); }
+    finally { setSummaryLoading(false); }
   };
 
   const handleDownload = () => {
@@ -342,6 +383,39 @@ function Lesson() {
           </p>
         )}
        </div>
+
+      {/* AI Summary */}
+      {features.aiTutor && (
+        <div style={{ marginTop: 16, textAlign: 'center' }}>
+          {!summary && (
+            <button
+              onClick={loadSummary}
+              disabled={summaryLoading}
+              className="btn-complete"
+              style={{ background: 'var(--color-info)' }}
+            >
+              {summaryLoading ? 'Generando resumen...' : 'Resumir lección'}
+            </button>
+          )}
+          {summary && (
+            <div style={{
+              marginTop: 12, padding: 20, background: 'var(--color-bg-alt)',
+              borderRadius: 'var(--radius-lg)', textAlign: 'left', lineHeight: 1.6
+            }}>
+              <h3 style={{ margin: '0 0 12px', color: 'var(--color-text)' }}>Resumen</h3>
+              <div style={{ whiteSpace: 'pre-wrap', color: 'var(--color-text-secondary)', fontSize: 14 }}>
+                {summary.summary}
+              </div>
+              {summary.keyConcepts && (
+                <div style={{ marginTop: 12 }}>
+                  <strong style={{ color: 'var(--color-text)', fontSize: 13 }}>Conceptos clave:</strong>
+                  <p style={{ color: 'var(--color-primary)', fontSize: 13, margin: '4px 0 0' }}>{summary.keyConcepts}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Previous / Next lesson navigation */}
       {allLessons.length > 1 && (

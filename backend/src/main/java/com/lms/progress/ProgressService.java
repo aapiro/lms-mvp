@@ -105,4 +105,21 @@ public class ProgressService {
 
         return (int) ((completedCount * 100) / lessons.size());
     }
+
+    @Transactional
+    public void savePosition(Long lessonId, Long userId, int positionSeconds) {
+        var progress = progressRepository.findByUserIdAndLessonId(userId, lessonId);
+        if (progress.isPresent()) {
+            Progress p = progress.get();
+            p.setLastPositionSeconds(positionSeconds);
+            progressRepository.save(p);
+        } else {
+            Progress p = new Progress();
+            p.setUserId(userId);
+            p.setLessonId(lessonId);
+            p.setCompleted(false);
+            p.setLastPositionSeconds(positionSeconds);
+            progressRepository.save(p);
+        }
+    }
 }

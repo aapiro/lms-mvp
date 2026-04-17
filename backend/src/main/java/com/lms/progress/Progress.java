@@ -25,6 +25,9 @@ public class Progress {
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
     
+    @Column(name = "last_position_seconds")
+    private Integer lastPositionSeconds = 0;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
     

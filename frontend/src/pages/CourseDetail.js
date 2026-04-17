@@ -19,6 +19,9 @@ function CourseDetail() {
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(false);
   const [activeTab, setActiveTab] = useState('lessons');
+  const [couponCode, setCouponCode] = useState('');
+  const [couponDiscount, setCouponDiscount] = useState(null);
+  const [couponError, setCouponError] = useState('');
 
   useEffect(() => {
     loadCourse();
@@ -184,11 +187,50 @@ function CourseDetail() {
         ) : isFree ? (
           <div className="purchase-section"><span className="price">Free</span></div>
         ) : (
-          <div className="purchase-section">
-            <span className="price">${course.price}</span>
-            <button onClick={handlePurchase} disabled={purchasing} className="btn-purchase">
-              {purchasing ? 'Processing...' : 'Purchase Course'}
-            </button>
+          <div className="purchase-section" style={{ flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+              <span className="price">
+                {couponDiscount ? (
+                  <>
+                    <span style={{ textDecoration: 'line-through', opacity: 0.5, marginRight: 8 }}>${course.price}</span>
+                    ${(course.price * (1 - couponDiscount / 100)).toFixed(2)}
+                  </>
+                ) : `$${course.price}`}
+              </span>
+              <button onClick={handlePurchase} disabled={purchasing} className="btn-purchase">
+                {purchasing ? 'Processing...' : 'Comprar Curso'}
+              </button>
+            </div>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', width: '100%' }}>
+              <input
+                type="text"
+                placeholder="Código de cupón"
+                value={couponCode}
+                onChange={e => { setCouponCode(e.target.value.toUpperCase()); setCouponError(''); }}
+                style={{ flex: 1, padding: '8px 12px', border: '1.5px solid var(--color-input-border)', borderRadius: 'var(--radius-md)', fontSize: 13 }}
+              />
+              <button
+                onClick={async () => {
+                  setCouponError('');
+                  setCouponDiscount(null);
+                  if (!couponCode.trim()) return;
+                  try {
+                    const res = await api.post('/coupons/validate', { code: couponCode.trim() });
+                    setCouponDiscount(res.data.discountPercent);
+                    addToast(`Cupón aplicado: ${res.data.discountPercent}% de descuento`, { type: 'success' });
+                  } catch (err) {
+                    setCouponError(err.response?.data?.error || 'Cupón no válido');
+                    setCouponDiscount(null);
+                  }
+                }}
+                className="btn-create"
+                style={{ padding: '8px 16px', fontSize: 13 }}
+              >
+                Aplicar
+              </button>
+            </div>
+            {couponError && <span style={{ color: 'var(--color-danger)', fontSize: 12 }}>{couponError}</span>}
+            {couponDiscount && <span style={{ color: 'var(--color-success)', fontSize: 12, fontWeight: 600 }}>Descuento del {couponDiscount}% aplicado</span>}
           </div>
         )}
       </div>
