@@ -70,8 +70,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/users/me", "/api/users/me/**").authenticated()
                 .anyRequest().authenticated()
             )
-            .addFilterBefore(rateLimitFilter, JwtAuthenticationFilter.class)
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(rateLimitFilter, JwtAuthenticationFilter.class);
         
         return http.build();
     }

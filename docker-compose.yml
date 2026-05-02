@@ -39,6 +39,7 @@ services:
     build: ./backend
     container_name: lms-backend
     environment:
+      SPRING_PROFILES_ACTIVE: dev
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/lmsdb
       SPRING_DATASOURCE_USERNAME: lmsuser
       SPRING_DATASOURCE_PASSWORD: lmspass123

@@ -106,7 +106,7 @@ public class CourseSteps {
         lesson.setCourseId(testCourse.getId());
         lesson.setTitle("Lección 1");
         lesson.setLessonOrder(1);
-        lesson.setLessonType("VIDEO");
+        lesson.setLessonType(Lesson.LessonType.VIDEO);
         lesson.setFileKey("test/file.mp4");
         lessonRepository.save(lesson);
     }
