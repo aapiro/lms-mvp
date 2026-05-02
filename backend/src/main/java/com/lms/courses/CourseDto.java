@@ -18,6 +18,7 @@ public class CourseDto {
         private String description;
         @NotNull @PositiveOrZero
         private BigDecimal price;
+        private String thumbnailUrl;
         private Course.CourseStatus status = Course.CourseStatus.PUBLISHED;
         private Course.EnrollmentType enrollmentType = Course.EnrollmentType.OPEN;
         private Integer capacityLimit;
@@ -32,6 +33,7 @@ public class CourseDto {
         private String title;
         private String description;
         private BigDecimal price;
+        private String thumbnailUrl;
         private Course.CourseStatus status;
         private Course.EnrollmentType enrollmentType;
         private Integer capacityLimit;

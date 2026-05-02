@@ -105,6 +105,15 @@
   box-shadow: var(--shadow-lg);
 }
 
+.course-thumb {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background-color: var(--color-surface-muted, #eee);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
 .course-info {
   padding: 20px;
 }

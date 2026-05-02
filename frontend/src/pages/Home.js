@@ -113,6 +113,14 @@ function Home() {
           <div className="courses-grid">
             {courses.map((course) => (
               <div key={course.id} className="course-card">
+                <div
+                  className="course-thumb"
+                  style={{
+                    backgroundImage: `url(${course.thumbnailUrl || `https://picsum.photos/seed/lms-course-${course.id}/640/360`})`,
+                  }}
+                  role="img"
+                  aria-label={`${course.title} cover`}
+                />
                 <div className="course-info">
                   <div className="course-title-row">
                     <h3>{course.title}</h3>

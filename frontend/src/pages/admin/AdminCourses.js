@@ -16,6 +16,7 @@ function AdminCourses({ courses, loadCourses, allCategories, allTags }) {
     title: '',
     description: '',
     price: '',
+    thumbnailUrl: '',
     status: 'PUBLISHED',
     enrollmentType: 'OPEN',
     capacityLimit: '',
@@ -51,7 +52,7 @@ function AdminCourses({ courses, loadCourses, allCategories, allTags }) {
   const [confirmAction, setConfirmAction] = useState(null);
 
   const resetCourseForm = () => {
-    setCourseForm({ title: '', description: '', price: '', status: 'PUBLISHED', enrollmentType: 'OPEN', capacityLimit: '', certificateTemplate: '', categoryIds: [], tagIds: [], prerequisiteCourseIds: [] });
+    setCourseForm({ title: '', description: '', price: '', thumbnailUrl: '', status: 'PUBLISHED', enrollmentType: 'OPEN', capacityLimit: '', certificateTemplate: '', categoryIds: [], tagIds: [], prerequisiteCourseIds: [] });
   };
 
   const handleSaveCourse = async (e) => {
@@ -96,6 +97,7 @@ function AdminCourses({ courses, loadCourses, allCategories, allTags }) {
       title: course.title || '',
       description: course.description || '',
       price: course.price || '',
+      thumbnailUrl: course.thumbnailUrl || '',
       status: course.status || 'PUBLISHED',
       enrollmentType: course.enrollmentType || 'OPEN',
       capacityLimit: course.capacityLimit || '',
@@ -287,6 +289,20 @@ function AdminCourses({ courses, loadCourses, allCategories, allTags }) {
             onChange={(e) => setCourseForm({ ...courseForm, price: e.target.value })}
             required
           />
+          <input
+            type="url"
+            placeholder="Cover image URL (e.g. https://picsum.photos/seed/abc/640/360)"
+            value={courseForm.thumbnailUrl}
+            onChange={(e) => setCourseForm({ ...courseForm, thumbnailUrl: e.target.value })}
+          />
+          {courseForm.thumbnailUrl && (
+            <img
+              src={courseForm.thumbnailUrl}
+              alt="Cover preview"
+              style={{ width: 240, aspectRatio: '16 / 9', objectFit: 'cover', borderRadius: 8, border: '1px solid var(--color-border, #ddd)' }}
+              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+            />
+          )}
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: 150 }}>
               <label style={{ display: 'block', marginBottom: 4, fontWeight: 600, fontSize: 13 }}>Estado</label>

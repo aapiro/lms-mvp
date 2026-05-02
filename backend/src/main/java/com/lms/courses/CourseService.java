@@ -34,6 +34,7 @@ public class CourseService {
         course.setTitle(request.getTitle());
         course.setDescription(request.getDescription());
         course.setPrice(request.getPrice());
+        course.setThumbnailUrl(request.getThumbnailUrl());
         course.setCreatedBy(user.getId());
         if (request.getStatus() != null) course.setStatus(request.getStatus());
         if (request.getEnrollmentType() != null) course.setEnrollmentType(request.getEnrollmentType());
@@ -53,6 +54,7 @@ public class CourseService {
         if (request.getTitle() != null) course.setTitle(request.getTitle());
         if (request.getDescription() != null) course.setDescription(request.getDescription());
         if (request.getPrice() != null) course.setPrice(request.getPrice());
+        if (request.getThumbnailUrl() != null) course.setThumbnailUrl(request.getThumbnailUrl());
         if (request.getStatus() != null) course.setStatus(request.getStatus());
         if (request.getEnrollmentType() != null) course.setEnrollmentType(request.getEnrollmentType());
         if (request.getCapacityLimit() != null) course.setCapacityLimit(request.getCapacityLimit());
