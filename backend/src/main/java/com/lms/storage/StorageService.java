@@ -7,7 +7,7 @@ import io.minio.PutObjectArgs;
 import io.minio.RemoveObjectArgs;
 import io.minio.StatObjectArgs;
 import io.minio.StatObjectResponse;
-import io.minio.http.Method;
+import io.minio.Http;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,7 +45,7 @@ public class StorageService {
                     PutObjectArgs.builder()
                             .bucket(bucket)
                             .object(fileName)
-                            .stream(inputStream, file.getSize(), -1)
+                            .stream(inputStream, file.getSize(), -1L)
                             .contentType(file.getContentType())
                             .build()
             );
@@ -65,7 +65,7 @@ public class StorageService {
             // presigned URL will be reachable from the browser and the signature will match.
             return minioClient.getPresignedObjectUrl(
                     GetPresignedObjectUrlArgs.builder()
-                            .method(Method.GET)
+                            .method(Http.Method.GET)
                             .bucket(bucket)
                             .object(fileKey)
                             .expiry(expirationMinutes, TimeUnit.MINUTES)
