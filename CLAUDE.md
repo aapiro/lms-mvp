@@ -101,6 +101,10 @@ All config is via environment variables. See `docker-compose.yml` for the full l
 
 Backend config: `backend/src/main/resources/application.properties` (reads from env vars).
 
+### Credentials
+
+`JWT_SECRET` and the Postgres/MinIO credentials in `docker-compose.yml` use `${VAR:-default}` interpolation: override them via a gitignored `.env` (see `.env.example`; `.env.prod.example` for production). The committed defaults are dev-grade — anything in the repo is public, so real deployments must set their own values. The MinIO variables are shared by three consumers (the `minio` service, the backend's `MINIO_ACCESS_KEY`/`MINIO_SECRET_KEY`, and the `minio-init` entrypoint in the override file) — keep them in sync through the variables, never hardcode. Changing `POSTGRES_PASSWORD` with an existing volume requires `docker compose down -v`; Postgres bakes credentials at initdb. Don't add per-service secrets to `docker-compose.override.yml`: its `environment` entries silently override the base file key-by-key.
+
 ## CI/CD
 
 GitHub Actions workflow (`.github/workflows/e2e.yml`) runs on push/PR to master: frontend unit tests (Jest exits 1 if no test files exist — keep at least one under `frontend/src/__tests__/`), backend BDD/unit tests, then builds the full Docker stack and runs Playwright E2E against it.
