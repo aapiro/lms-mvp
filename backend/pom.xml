@@ -21,6 +21,8 @@
     <properties>
         <java.version>17</java.version>
         <lombok.version>1.18.38</lombok.version>
+        <!-- PostgreSQL 18 requires Flyway 11+; Boot 3.2.1 manages 9.22.x -->
+        <flyway.version>11.20.3</flyway.version>
     </properties>
     
     <dependencies>
@@ -55,10 +57,15 @@
             <scope>runtime</scope>
         </dependency>
         
-        <!-- Flyway -->
+        <!-- Flyway (10+ ships PostgreSQL support as a separate module) -->
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+            <version>${flyway.version}</version>
         </dependency>
         
         <!-- JWT -->

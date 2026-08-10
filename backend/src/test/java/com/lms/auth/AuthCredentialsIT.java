@@ -30,7 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class AuthCredentialsIT {
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:18-alpine")
             .withDatabaseName("lmsdb_test")
             .withUsername("test")
             .withPassword("test");
