@@ -43,7 +43,7 @@ services:
     entrypoint: >
       sh -c "
         echo 'Esperando MinIO...' &&
-        until mc alias set myminio http://lms-minio:9000 minioadmin minioadmin123 --api S3v4 2>/dev/null; do
+        until mc alias set myminio http://lms-minio:9000 ${MINIO_ROOT_USER:-lmsminio} ${MINIO_ROOT_PASSWORD:-76a118ab4edabd39256569b0261f070a} --api S3v4 2>/dev/null; do
           sleep 2;
         done &&
         mc mb --ignore-existing myminio/lms-content &&
@@ -72,5 +72,4 @@ services:
     command: mvn -DskipTests spring-boot:run
     environment:
       SPRING_PROFILES_ACTIVE: dev
-      # Mínimo 32 caracteres (256 bits en UTF-8) para jjwt HS256; obligatorio si el JAR no incluye el estirado SHA del JwtService
-      JWT_SECRET: lms-local-dev-jwt-secret-at-least-32-chars
+      # JWT_SECRET viene del docker-compose.yml base (mínimo 32 chars para jjwt HS256)

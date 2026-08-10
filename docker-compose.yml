@@ -4,9 +4,9 @@ services:
     image: postgres:18-alpine
     container_name: lms-postgres
     environment:
-      POSTGRES_DB: lmsdb
-      POSTGRES_USER: lmsuser
-      POSTGRES_PASSWORD: lmspass123
+      POSTGRES_DB: ${POSTGRES_DB:-lmsdb}
+      POSTGRES_USER: ${POSTGRES_USER:-lmsuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-38fc11a0b3eb3fd615d7c2c68fe0dd4e}
     ports:
       - "5432:5432"
     volumes:
@@ -21,8 +21,8 @@ services:
     container_name: lms-minio
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin123
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-lmsminio}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-76a118ab4edabd39256569b0261f070a}
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -45,16 +45,17 @@ services:
       # E2E suites fire many logins per minute from one IP; keep the limiter off
       # in the dev/E2E stack (defaults to enabled elsewhere)
       RATELIMIT_ENABLED: "false"
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/lmsdb
-      SPRING_DATASOURCE_USERNAME: lmsuser
-      SPRING_DATASOURCE_PASSWORD: lmspass123
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-lmsdb}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-lmsuser}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-38fc11a0b3eb3fd615d7c2c68fe0dd4e}
       MINIO_ENDPOINT: http://minio:9000
-      MINIO_ACCESS_KEY: minioadmin
-      MINIO_SECRET_KEY: minioadmin123
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-lmsminio}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-76a118ab4edabd39256569b0261f070a}
       MINIO_BUCKET: lms-content
       # Public endpoint used to make presigned URLs reachable from host/browser
       MINIO_PUBLIC_ENDPOINT: http://host.docker.internal:9000
-      JWT_SECRET: your-super-secret-jwt-key-change-in-production
+      # Dev-grade default (any committed value is public); override via .env in real deployments
+      JWT_SECRET: ${JWT_SECRET:-4yBbW4T72DCsfw2iglan/ggrjbcw+V90ZvwBoCn7iP9BlAt6u4wemQgou1U3IZnL}
       STRIPE_SECRET_KEY: sk_test_your_stripe_secret_key
       STRIPE_WEBHOOK_SECRET: whsec_your_webhook_secret
       FRONTEND_URL: http://localhost:3000
