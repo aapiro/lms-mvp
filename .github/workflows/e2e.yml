@@ -78,6 +78,12 @@ jobs:
           PLAYWRIGHT_API_URL: http://localhost:8080/api
         run: npx playwright test
 
+      - name: Dump stack logs on failure
+        if: failure()
+        run: |
+          docker compose ps -a
+          docker compose logs --tail 200
+
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
