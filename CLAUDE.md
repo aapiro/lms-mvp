@@ -9,8 +9,8 @@ LMS (Learning Management System) MVP — a Pluralsight-style platform for online
 ## Architecture
 
 - **Frontend**: React 18 SPA (Create React App) on port 3000
-- **Backend**: Spring Boot 3.2.1 (Java 17) REST API on port 8080
-- **Database**: PostgreSQL 18 with Flyway 11 migrations (`flyway.version` pinned in `backend/pom.xml` together with the `flyway-database-postgresql` module — Spring Boot 3.2.1's managed Flyway 9.x does not support PG 16+)
+- **Backend**: Spring Boot 3.5.x (Java 17) REST API on port 8080
+- **Database**: PostgreSQL 18 with Flyway 11 migrations (`flyway.version` pinned in `backend/pom.xml` above Boot's managed version, plus the `flyway-database-postgresql` module)
 - **Storage**: MinIO (S3-compatible) for video/PDF lesson content
 - **Payments**: Stripe Checkout with webhook integration
 - **Auth**: Stateless JWT (HS256) with Spring Security + BCrypt passwords. API semantics: 401 for missing/invalid token and bad credentials (`InvalidCredentialsException`), 403 for insufficient role
