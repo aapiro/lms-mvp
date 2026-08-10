@@ -42,6 +42,9 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .exceptionHandling(ex -> ex.authenticationEntryPoint(
+                    new org.springframework.security.web.authentication.HttpStatusEntryPoint(
+                            org.springframework.http.HttpStatus.UNAUTHORIZED)))
             .headers(headers -> headers
                 // Permite que el iframe en la misma página cargue el contenido del stream
                 // (PDF/video). DENY bloquea cualquier iframe; SAMEORIGIN lo permite

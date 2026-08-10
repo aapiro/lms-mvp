@@ -40,6 +40,9 @@ services:
     container_name: lms-backend
     environment:
       SPRING_PROFILES_ACTIVE: dev
+      # E2E suites fire many logins per minute from one IP; keep the limiter off
+      # in the dev/E2E stack (defaults to enabled elsewhere)
+      RATELIMIT_ENABLED: "false"
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/lmsdb
       SPRING_DATASOURCE_USERNAME: lmsuser
       SPRING_DATASOURCE_PASSWORD: lmspass123

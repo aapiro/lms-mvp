@@ -44,8 +44,13 @@ api.interceptors.response.use(
     const originalRequest = error.config;
 
     if (error.response?.status === 401 && !originalRequest._retry) {
-      // Don't try to refresh if we're already on the refresh endpoint
-      if (originalRequest.url?.includes('/auth/refresh') || originalRequest.url?.includes('/auth/login')) {
+      // Failed login/register: let the page show the error, no redirect
+      if (originalRequest.url?.includes('/auth/login') || originalRequest.url?.includes('/auth/register')) {
+        return Promise.reject(error);
+      }
+
+      // Expired session on the refresh endpoint: clear and go to login
+      if (originalRequest.url?.includes('/auth/refresh')) {
         try {
           localStorage.removeItem('token');
           localStorage.removeItem('refreshToken');

@@ -13,6 +13,12 @@ public class CucumberHooks {
     public void cleanDatabase() {
         // Clean test data in correct order (respect FK constraints)
         // Skip seeded data from Flyway migrations by only deleting test-created rows
+        jdbcTemplate.execute("DELETE FROM certificates");
+        jdbcTemplate.execute("DELETE FROM active_sessions");
+        jdbcTemplate.execute("DELETE FROM error_log");
+        jdbcTemplate.execute("DELETE FROM request_metrics");
+        jdbcTemplate.execute("DELETE FROM security_events");
+        jdbcTemplate.execute("DELETE FROM password_reset_tokens");
         jdbcTemplate.execute("DELETE FROM tutor_messages");
         jdbcTemplate.execute("DELETE FROM tutor_conversations");
         jdbcTemplate.execute("DELETE FROM user_xp");
@@ -35,6 +41,8 @@ public class CucumberHooks {
         jdbcTemplate.execute("DELETE FROM course_prerequisites");
         jdbcTemplate.execute("DELETE FROM course_categories");
         jdbcTemplate.execute("DELETE FROM course_tags");
-        jdbcTemplate.execute("DELETE FROM courses WHERE id NOT IN (SELECT id FROM courses WHERE created_at < NOW() - INTERVAL '1 second')");
+        jdbcTemplate.execute("DELETE FROM courses");
+        // Test users all use @test.com emails; keep Flyway-seeded demo users
+        jdbcTemplate.execute("DELETE FROM users WHERE email LIKE '%@test.com'");
     }
 }

@@ -23,6 +23,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
     @Autowired(required = false)
     private SecurityEventService securityEventService;
 
+    @org.springframework.beans.factory.annotation.Value("${ratelimit.enabled:true}")
+    private boolean rateLimitEnabled;
+
     private static final int LOGIN_MAX_ATTEMPTS = 5;
     private static final int REGISTER_MAX_ATTEMPTS = 3;
     private static final long WINDOW_MS = 60_000; // 1 minute
@@ -37,6 +40,11 @@ public class RateLimitFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
+
+        if (!rateLimitEnabled) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         String path = request.getRequestURI();
         String method = request.getMethod();

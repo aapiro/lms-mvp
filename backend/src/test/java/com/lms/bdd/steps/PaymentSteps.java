@@ -28,6 +28,7 @@ public class PaymentSteps {
     private Course testCourse;
 
     @Dado("que estoy autenticado como estudiante")
+    @Dado("estoy autenticado como estudiante")
     public void autenticar_estudiante() {
         studentUser = dataFactory.createStudent("student-pay@test.com", "Pass1234", "Estudiante");
         var loginRes = restTemplate.postForEntity("/api/auth/login",

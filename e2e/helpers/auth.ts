@@ -12,7 +12,7 @@ export async function loginViaApi(
   const base = normalizeApiUrl(apiUrl);
   const loginUrl = `${base}/auth/login`;
   const res = await page.request.post(loginUrl, {
-    json: credentials,
+    data: credentials,
   });
   if (!res.ok()) {
     const text = await res.text();
@@ -32,7 +32,8 @@ export async function loginViaApi(
   const { token, ...userData } = body;
   if (!token) throw new Error('Login response missing token');
 
-  await page.goto('about:blank');
+  // localStorage is not accessible on about:blank (opaque origin) — use the app origin
+  await page.goto('/');
   await page.evaluate(
     ({ token: t, userData: u }) => {
       localStorage.setItem('token', t);
