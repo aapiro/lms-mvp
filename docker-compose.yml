@@ -61,6 +61,11 @@ services:
       FRONTEND_URL: http://localhost:3000
     ports:
       - "8080:8080"
+    # host.docker.internal only exists out of the box on Docker Desktop;
+    # on Linux (CI) it must be mapped to the host gateway or the MinIO
+    # client fails DNS resolution at startup (MINIO_PUBLIC_ENDPOINT)
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       - postgres
       - minio
