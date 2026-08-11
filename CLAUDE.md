@@ -8,7 +8,7 @@ LMS (Learning Management System) MVP — a Pluralsight-style platform for online
 
 ## Architecture
 
-- **Frontend**: React 18 SPA (Vite + Vitest; JSX lives in `.js` files, handled by a transform plugin in `vite.config.js`) on port 3000
+- **Frontend**: React 19 SPA with react-router 7 (Vite + Vitest; JSX lives in `.js` files, handled by a transform plugin in `vite.config.js`) on port 3000
 - **Backend**: Spring Boot 3.5.x (Java 17) REST API on port 8080
 - **Database**: PostgreSQL 18 with Flyway 11 migrations (`flyway.version` pinned in `backend/pom.xml` above Boot's managed version, plus the `flyway-database-postgresql` module)
 - **Storage**: MinIO (S3-compatible) for video/PDF lesson content
