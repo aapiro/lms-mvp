@@ -17,8 +17,8 @@ test('renders title and message', () => {
 
 test('invokes callbacks from action buttons', async () => {
   const user = userEvent.setup();
-  const onConfirm = jest.fn();
-  const onCancel = jest.fn();
+  const onConfirm = vi.fn();
+  const onCancel = vi.fn();
   render(<ConfirmModal onConfirm={onConfirm} onCancel={onCancel} />);
 
   await user.click(screen.getByRole('button', { name: 'Confirm' }));

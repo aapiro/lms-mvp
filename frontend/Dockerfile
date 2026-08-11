@@ -1,4 +1,4 @@
-FROM node:18-alpine AS build
+FROM node:22-alpine AS build
 
 WORKDIR /app
 
@@ -8,8 +8,8 @@ RUN npm install
 COPY . .
 
 # Build-time arg to enable dev login in the built app
-ARG REACT_APP_ENABLE_DEV_LOGIN=false
-ENV REACT_APP_ENABLE_DEV_LOGIN=${REACT_APP_ENABLE_DEV_LOGIN}
+ARG VITE_ENABLE_DEV_LOGIN=false
+ENV VITE_ENABLE_DEV_LOGIN=${VITE_ENABLE_DEV_LOGIN}
 
 RUN npm run build
 

@@ -67,7 +67,7 @@ function Home() {
     }
   };
 
-  const enableDevLogin = process.env.REACT_APP_ENABLE_DEV_LOGIN === 'true';
+  const enableDevLogin = import.meta.env.VITE_ENABLE_DEV_LOGIN === 'true';
 
   return (
     <div className="home-container">

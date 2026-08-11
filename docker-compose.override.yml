@@ -25,14 +25,17 @@ services:
     volumes:
       - ./frontend/src:/app/src:delegated        # cambios en src → hot reload
       - ./frontend/public:/app/public:delegated  # cambios en public → hot reload
+      - ./frontend/index.html:/app/index.html:delegated      # entry HTML de Vite
+      - ./frontend/vite.config.js:/app/vite.config.js:delegated  # config (puerto, proxy, jsx)
       # node_modules NO se monta; se usa el de la imagen (evita conflictos de SO)
     working_dir: /app
-    # PORT=80 → React dev server escucha en el mismo puerto que nginx en prod
+    # PORT=80 → Vite dev server escucha en el mismo puerto que nginx en prod
     # Así reutilizamos el mapeo 3000:80 del docker-compose.yml base sin conflicto
     command: sh -c "PORT=80 npm start"
     environment:
       - CHOKIDAR_USEPOLLING=true          # necesario en macOS para detectar cambios
-      - REACT_APP_API_URL=http://localhost:8080/api
+      # El proxy /api del dev server (vite.config.js) apunta al backend del compose
+      - PROXY_TARGET=http://backend:8080
 
   # ── MINIO-INIT ───────────────────────────────────────────────────────────────
   # Sube los archivos de media demo al bucket en cada arranque.

@@ -4,12 +4,12 @@ Pendientes tras la modernización de agosto 2026 (tests verdes, PG18, Boot 3.5, 
 
 ## Prioridad alta
 
-- [ ] **Migración CRA → Vite**: `react-scripts` 5 está abandonado. Desbloquea React 19 y react-router 7, y elimina la mayoría de findings de `npm audit` (transitivos de react-scripts sin arreglo dentro de CRA).
+- [x] **Migración CRA → Vite** (agosto 2026): Vite 7 + Vitest 4. Env vars ahora `VITE_*` (`import.meta.env`), proxy dev en `vite.config.js`, JSX en `.js` vía plugin de transformación.
 - [ ] **Probar checkout Stripe real en test mode**: el upgrade stripe-java 24 → 33 cambia la versión de API enviada en las llamadas. Los tests BDD usan el bypass de pago dev (`dev_payments`), así que el flujo real de Checkout/webhook no está cubierto. Verificar `Session.create` y `Webhook.constructEvent` con claves de test antes de confiar en producción.
 
 ## Prioridad media
 
-- [ ] **React 19 + react-router 7**: tras la migración a Vite (bloqueados por CRA).
+- [ ] **React 19 + react-router 7**: ya desbloqueados por Vite; upgrade en tarea propia.
 - [ ] **Actuator health DOWN en dev**: `MailHealthIndicator` falla sin SMTP configurado y tumba `/actuator/health` completo. Valorar `management.health.mail.enabled=false` en dev o configurar credenciales.
 - [ ] **Rediseñar MinioConfig**: el cliente usa `MINIO_PUBLIC_ENDPOINT` para todo (incluido `bucketExists` en arranque), lo que acopla la salud del backend a la resolubilidad del endpoint público (origen del crash en CI con minio 9). Lo correcto: cliente interno contra `minio:9000` y endpoint público solo para firmar presigned URLs.
 

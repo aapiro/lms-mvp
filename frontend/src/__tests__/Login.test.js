@@ -3,15 +3,17 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import Login from '../pages/Login';
 
-const mockLogin = jest.fn();
-const mockNavigate = jest.fn();
+const { mockLogin, mockNavigate } = vi.hoisted(() => ({
+  mockLogin: vi.fn(),
+  mockNavigate: vi.fn(),
+}));
 
-jest.mock('../context/AuthContext', () => ({
+vi.mock('../context/AuthContext', () => ({
   useAuth: () => ({ login: mockLogin }),
 }));
 
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
+vi.mock('react-router-dom', async (importOriginal) => ({
+  ...(await importOriginal()),
   useNavigate: () => mockNavigate,
 }));
 

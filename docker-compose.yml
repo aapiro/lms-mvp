@@ -76,11 +76,8 @@ services:
     build:
       context: ./frontend
       args:
-        REACT_APP_ENABLE_DEV_LOGIN: ${REACT_APP_ENABLE_DEV_LOGIN:-false}
+        VITE_ENABLE_DEV_LOGIN: ${VITE_ENABLE_DEV_LOGIN:-false}
     container_name: lms-frontend
-    environment:
-      REACT_APP_API_URL: http://localhost:8080/api
-      REACT_APP_STRIPE_PUBLIC_KEY: pk_test_your_stripe_public_key
     ports:
       - "3000:80"
     depends_on:
