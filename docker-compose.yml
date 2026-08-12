@@ -56,8 +56,8 @@ services:
       MINIO_PUBLIC_ENDPOINT: http://host.docker.internal:9000
       # Dev-grade default (any committed value is public); override via .env in real deployments
       JWT_SECRET: ${JWT_SECRET:-4yBbW4T72DCsfw2iglan/ggrjbcw+V90ZvwBoCn7iP9BlAt6u4wemQgou1U3IZnL}
-      STRIPE_SECRET_KEY: sk_test_your_stripe_secret_key
-      STRIPE_WEBHOOK_SECRET: whsec_your_webhook_secret
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-sk_test_your_stripe_secret_key}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-whsec_your_webhook_secret}
       FRONTEND_URL: http://localhost:3000
     ports:
       - "8080:8080"

@@ -5,7 +5,7 @@ Pendientes tras la modernización de agosto 2026 (tests verdes, PG18, Boot 3.5, 
 ## Prioridad alta
 
 - [x] **Migración CRA → Vite** (agosto 2026): Vite 7 + Vitest 4. Env vars ahora `VITE_*` (`import.meta.env`), proxy dev en `vite.config.js`, JSX en `.js` vía plugin de transformación.
-- [ ] **Probar checkout Stripe real en test mode**: el upgrade stripe-java 24 → 33 cambia la versión de API enviada en las llamadas. Los tests BDD usan el bypass de pago dev (`dev_payments`), así que el flujo real de Checkout/webhook no está cubierto. Verificar `Session.create` y `Webhook.constructEvent` con claves de test antes de confiar en producción.
+- [ ] **Probar checkout Stripe real en test mode**: compatibilidad del SDK 33 ya validada contra stripe-mock (`StripeSessionCompatTest`: `Session.create`/`retrieve` con la misma forma de params que `PaymentService`). Falta el flujo end-to-end con claves reales de test: poner `STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET` en `.env` (ver `.env.example`), `stripe listen --forward-to localhost:8080/api/payments/webhook`, comprar con tarjeta `4242 4242 4242 4242` y verificar que el webhook crea la purchase.
 
 ## Prioridad media
 
