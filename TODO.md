@@ -10,8 +10,8 @@ Pendientes tras la modernización de agosto 2026 (tests verdes, PG18, Boot 3.5, 
 ## Prioridad media
 
 - [x] **React 19 + react-router 7** (agosto 2026): drop-in tras Vite; react-chartjs-2 5.3.1 para peer de React 19.
-- [ ] **Actuator health DOWN en dev**: `MailHealthIndicator` falla sin SMTP configurado y tumba `/actuator/health` completo. Valorar `management.health.mail.enabled=false` en dev o configurar credenciales.
-- [ ] **Rediseñar MinioConfig**: el cliente usa `MINIO_PUBLIC_ENDPOINT` para todo (incluido `bucketExists` en arranque), lo que acopla la salud del backend a la resolubilidad del endpoint público (origen del crash en CI con minio 9). Lo correcto: cliente interno contra `minio:9000` y endpoint público solo para firmar presigned URLs.
+- [x] **Actuator health DOWN en dev** (agosto 2026): `management.health.mail.enabled=${MAIL_ENABLED:false}` — el health de SMTP solo cuenta cuando el mail está activo.
+- [x] **Rediseñar MinioConfig** (agosto 2026): cliente interno (`@Primary`) para operaciones y `minioPresignerClient` con endpoint público solo para firmar URLs; el arranque ya no depende de resolver el endpoint público.
 
 ## Prioridad baja
 

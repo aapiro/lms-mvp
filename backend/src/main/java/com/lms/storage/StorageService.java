@@ -8,8 +8,8 @@ import io.minio.RemoveObjectArgs;
 import io.minio.StatObjectArgs;
 import io.minio.StatObjectResponse;
 import io.minio.Http;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,17 +23,21 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class StorageService {
-    
+
+    // Internal-endpoint client for storage operations
     private final MinioClient minioClient;
-    
+    // Public-endpoint client used only to sign presigned URLs (see MinioConfig)
+    private final MinioClient presignerClient;
+
     @Value("${minio.bucket}")
     private String bucket;
 
-    // Optional public endpoint to make presigned URLs reachable from host/browser
-    @Value("${MINIO_PUBLIC_ENDPOINT:}")
-    private String minioPublicEndpoint;
+    public StorageService(MinioClient minioClient,
+                          @Qualifier("minioPresignerClient") MinioClient presignerClient) {
+        this.minioClient = minioClient;
+        this.presignerClient = presignerClient;
+    }
 
     public String uploadFile(MultipartFile file, String folder) {
         try {
@@ -60,10 +64,9 @@ public class StorageService {
     
     public String getPresignedUrl(String fileKey, int expirationMinutes) {
         try {
-            // Generate presigned URL using the MinioClient. The client is built with
-            // the public endpoint when configured (see MinioConfig), so the returned
-            // presigned URL will be reachable from the browser and the signature will match.
-            return minioClient.getPresignedObjectUrl(
+            // The presigner client is built with the public endpoint when configured,
+            // so the returned URL is reachable from the browser and the signature matches.
+            return presignerClient.getPresignedObjectUrl(
                     GetPresignedObjectUrlArgs.builder()
                             .method(Http.Method.GET)
                             .bucket(bucket)
