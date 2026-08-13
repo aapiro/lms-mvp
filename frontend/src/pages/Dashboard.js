@@ -13,20 +13,19 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const loadDashboard = async () => {
+      try {
+        const [dashRes, statsRes] = await Promise.all([
+          api.get('/dashboard'),
+          features.gamification ? api.get('/gamification/stats').catch(() => ({ data: null })) : Promise.resolve({ data: null }),
+        ]);
+        setData(dashRes.data);
+        setStats(statsRes.data);
+      } catch { /* ignore */ }
+      finally { setLoading(false); }
+    };
     loadDashboard();
-  }, []);
-
-  const loadDashboard = async () => {
-    try {
-      const [dashRes, statsRes] = await Promise.all([
-        api.get('/dashboard'),
-        features.gamification ? api.get('/gamification/stats').catch(() => ({ data: null })) : Promise.resolve({ data: null }),
-      ]);
-      setData(dashRes.data);
-      setStats(statsRes.data);
-    } catch { /* ignore */ }
-    finally { setLoading(false); }
-  };
+  }, [features.gamification]);
 
   if (loading) return <div className="loading">Cargando dashboard...</div>;
   if (!data) return <div className="error">No se pudo cargar el dashboard.</div>;

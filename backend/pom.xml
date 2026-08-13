@@ -23,8 +23,23 @@
         <lombok.version>1.18.38</lombok.version>
         <!-- PostgreSQL 18 needs a recent Flyway 11; newer than Boot 3.5's managed version -->
         <flyway.version>11.20.3</flyway.version>
+        <cucumber.version>7.34.6</cucumber.version>
     </properties>
     
+    <dependencyManagement>
+        <dependencies>
+            <!-- Cucumber 7.34 is built against JUnit Platform 1.14; Boot 3.5's
+                 managed 1.12 makes the cucumber engine fail test discovery -->
+            <dependency>
+                <groupId>org.junit</groupId>
+                <artifactId>junit-bom</artifactId>
+                <version>5.14.2</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
         <!-- Spring Boot Web -->
         <dependency>
@@ -152,19 +167,19 @@
         <dependency>
             <groupId>io.cucumber</groupId>
             <artifactId>cucumber-java</artifactId>
-            <version>7.15.0</version>
+            <version>${cucumber.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.cucumber</groupId>
             <artifactId>cucumber-spring</artifactId>
-            <version>7.15.0</version>
+            <version>${cucumber.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.cucumber</groupId>
             <artifactId>cucumber-junit-platform-engine</artifactId>
-            <version>7.15.0</version>
+            <version>${cucumber.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

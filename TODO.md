@@ -16,6 +16,6 @@ Pendientes tras la modernización de agosto 2026 (tests verdes, PG18, Boot 3.5, 
 
 ## Prioridad baja
 
-- [ ] Warning `react-hooks/exhaustive-deps` en `frontend/src/pages/Dashboard.js` (useEffect sin `loadDashboard` en deps).
-- [ ] Subir Cucumber 7.15.0 a la última 7.x.
-- [ ] Ampliar tests frontend (solo existen ConfirmModal y Login; Admin.js ~130KB sin cobertura).
+- [x] Warning `react-hooks/exhaustive-deps` en Dashboard.js (agosto 2026): fetch movido dentro del useEffect con `features.gamification` como dependencia real.
+- [x] Cucumber 7.15.0 → 7.34.6 (agosto 2026): requiere `junit-bom` 5.14.2 importado (Boot 3.5 gestiona Platform 1.12 y el engine no descubre tests).
+- [x] Ampliar tests frontend (agosto 2026): +9 tests de hooks (`useForm`, `usePagination`) — 13 en total. Admin.js sigue sin cobertura directa (lo cubre E2E admin.spec).
