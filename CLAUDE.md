@@ -15,7 +15,7 @@ LMS (Learning Management System) MVP — a Pluralsight-style platform for online
 - **Payments**: Stripe Checkout with webhook integration
 - **Auth**: Stateless JWT (HS256) with Spring Security + BCrypt passwords. API semantics: 401 for missing/invalid token and bad credentials (`InvalidCredentialsException`), 403 for insufficient role
 
-Frontend proxies `/api` requests to the backend via Nginx in production; in dev mode, React's proxy or direct calls to localhost:8080.
+Frontend proxies `/api` requests to the backend via Nginx in production; in dev mode, Vite's `server.proxy` (target from `PROXY_TARGET`, defaults to localhost:8080).
 
 ## Development Commands
 
@@ -36,7 +36,7 @@ mvn test -Dtest=ClassName              # Run single test class
 mvn test -Dtest=ClassName#methodName   # Run single test method
 mvn clean package -DskipTests          # Build JAR without tests
 ```
-`mvn test` needs a running Docker daemon: the Cucumber BDD suite (`CucumberTest`) boots Postgres 18 + MinIO via Testcontainers. `SpringIntegrationTest` starts its containers in a static block because Cucumber's JUnit Platform engine does not run the Jupiter `@Testcontainers` extension. With colima instead of Docker Desktop, export first:
+`mvn test` needs a running Docker daemon: the Cucumber BDD suite (`CucumberTest`) boots Postgres 18 + MinIO via Testcontainers, and the payments tests (`StripeSessionCompatTest`, `PaymentWebhookFlowTest`) additionally boot `stripe/stripe-mock` — the full Stripe checkout/webhook flow is covered without real keys (`stripe.api-base` / `STRIPE_API_BASE` points the SDK at the mock; empty = real Stripe). `SpringIntegrationTest` starts its containers in a static block because Cucumber's JUnit Platform engine does not run the Jupiter `@Testcontainers` extension. Cucumber's version lives in the `cucumber.version` property and is paired with an explicit `junit-bom` import — Cucumber 7.34+ needs a newer JUnit Platform than Boot manages, or test discovery fails with "TestEngine with ID 'cucumber' failed to discover tests". With colima instead of Docker Desktop, export first:
 ```bash
 export DOCKER_HOST="unix://$HOME/.colima/default/docker.sock"
 export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE="/var/run/docker.sock"
@@ -46,10 +46,12 @@ export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE="/var/run/docker.sock"
 ```bash
 cd frontend
 npm install
-npm start         # Dev server on port 3000
-npm run build     # Production build
-npm test          # Run tests
+npm start         # Vite dev server on port 3000 (PORT env overrides)
+npm run build     # Production build (output in build/, served by nginx)
+npm test          # Vitest, single run
+npm run test:watch  # Vitest watch mode
 ```
+Node 20.19+/22 required (Vite 7). Regenerate `package-lock.json` with npm 10 (e.g. inside a `node:20` container) — locks written by npm 11 fail `npm ci` on CI's Node 20. The dev container mounts `src/`, `public/`, `index.html` and `vite.config.js`; config changes outside those need an image rebuild.
 
 ### E2E tests (Playwright)
 ```bash
@@ -76,7 +78,7 @@ The dev/E2E compose stack sets `RATELIMIT_ENABLED: "false"` (the login rate limi
 | `assessments` | Quiz/assessment system |
 | `enrollments` | Course enrollment management |
 | `users` | User management, groups, roles (USER/ADMIN/STUDENT/INSTRUCTOR) |
-| `storage` | MinIO integration, presigned URL generation (60-min expiry) |
+| `storage` | MinIO integration, presigned URL generation (60-min expiry). Two clients: internal for operations, `minioPresignerClient` (public endpoint) only signs URLs |
 | `config` | SecurityConfig, MinioConfig, AuditLog, DevDemoPasswordsInitializer |
 
 ## Database Migrations
@@ -95,9 +97,10 @@ Key tables: `users`, `courses`, `lessons`, `purchases`, `progress`, `assessments
 ## Environment Configuration
 
 All config is via environment variables. See `docker-compose.yml` for the full list. Key ones:
-- `SPRING_DATASOURCE_URL`, `JWT_SECRET`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
-- `MINIO_ENDPOINT`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`, `MINIO_BUCKET`
-- `REACT_APP_API_URL`, `REACT_APP_STRIPE_PUBLIC_KEY`
+- `SPRING_DATASOURCE_URL`, `JWT_SECRET`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_API_BASE` (tests only)
+- `MINIO_ENDPOINT`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`, `MINIO_BUCKET`, `MINIO_PUBLIC_ENDPOINT`
+- Frontend build args: `VITE_API_URL`, `VITE_ENABLE_DEV_LOGIN` (baked at build time via `import.meta.env`)
+- `MAIL_ENABLED` also gates the SMTP health indicator — without it, a missing mail config would drag `/actuator/health` to DOWN
 
 Backend config: `backend/src/main/resources/application.properties` (reads from env vars).
 
@@ -107,7 +110,7 @@ Backend config: `backend/src/main/resources/application.properties` (reads from 
 
 ## CI/CD
 
-GitHub Actions workflow (`.github/workflows/e2e.yml`) runs on push/PR to master: frontend unit tests (Jest exits 1 if no test files exist — keep at least one under `frontend/src/__tests__/`), backend BDD/unit tests, then builds the full Docker stack and runs Playwright E2E against it.
+GitHub Actions workflow (`.github/workflows/e2e.yml`) runs on push/PR to master: frontend unit tests (Vitest), backend BDD/unit tests, then builds the full Docker stack and runs Playwright E2E against it. On e2e failure the job dumps `docker compose ps -a` + container logs — without that, a crashed backend just looks like a 120s timeout in global-setup.
 
 ## License
 
