@@ -5,7 +5,8 @@ Pendientes tras la modernización de agosto 2026 (tests verdes, PG18, Boot 3.5, 
 ## Prioridad alta
 
 - [x] **Migración CRA → Vite** (agosto 2026): Vite 7 + Vitest 4. Env vars ahora `VITE_*` (`import.meta.env`), proxy dev en `vite.config.js`, JSX en `.js` vía plugin de transformación.
-- [ ] **Probar checkout Stripe real en test mode**: compatibilidad del SDK 33 ya validada contra stripe-mock (`StripeSessionCompatTest`: `Session.create`/`retrieve` con la misma forma de params que `PaymentService`). Falta el flujo end-to-end con claves reales de test: poner `STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET` en `.env` (ver `.env.example`), `stripe listen --forward-to localhost:8080/api/payments/webhook`, comprar con tarjeta `4242 4242 4242 4242` y verificar que el webhook crea la purchase.
+- [x] **Checkout Stripe con mock** (agosto 2026): `PaymentWebhookFlowTest` cubre el flujo completo contra stripe-mock — checkout por el stack real (controller→service→SDK 33), webhook `checkout.session.completed` con firma HMAC válida crea la purchase, firma inválida → 400. El webhook ahora usa la Session del payload verificado (patrón recomendado por Stripe, sin `Session.retrieve` extra) y `stripe.api-base` es configurable para tests.
+- [ ] **(Opcional) Checkout Stripe contra cuenta real en test mode**: humo manual con claves `sk_test_` propias — `.env` + `stripe listen --forward-to localhost:8080/api/payments/webhook` + tarjeta `4242 4242 4242 4242`.
 
 ## Prioridad media
 

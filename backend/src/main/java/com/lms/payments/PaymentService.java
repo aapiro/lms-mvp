@@ -29,6 +29,10 @@ public class PaymentService {
     @Value("${stripe.secret-key}")
     private String stripeSecretKey;
 
+    // Optional override for tests (e.g. stripe-mock); empty = real Stripe
+    @Value("${stripe.api-base:}")
+    private String stripeApiBase;
+
     @Value("${frontend.url}")
     private String frontendUrl;
 
@@ -45,6 +49,9 @@ public class PaymentService {
     @PostConstruct
     public void init() {
         Stripe.apiKey = stripeSecretKey;
+        if (stripeApiBase != null && !stripeApiBase.isBlank()) {
+            Stripe.overrideApiBase(stripeApiBase);
+        }
     }
 
     public String createCheckoutSession(Long courseId, User user) throws StripeException {
@@ -108,10 +115,13 @@ public class PaymentService {
         return session.getUrl();
     }
 
+    /**
+     * Records the purchase from the checkout.session.completed webhook event.
+     * Uses the Session object carried in the (signature-verified) event payload
+     * — Stripe's recommended pattern — instead of re-fetching it from the API.
+     */
     @Transactional
-    public void handleSuccessfulPayment(String sessionId) throws StripeException {
-        Session session = Session.retrieve(sessionId);
-
+    public void handleSuccessfulPayment(Session session) throws StripeException {
         Long courseId = Long.parseLong(session.getMetadata().get("courseId"));
         Long userId = Long.parseLong(session.getMetadata().get("userId"));
 

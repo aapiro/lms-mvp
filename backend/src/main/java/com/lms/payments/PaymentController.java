@@ -51,7 +51,7 @@ public class PaymentController {
                         .getObject()
                         .orElseThrow(() -> new RuntimeException("Session not found"));
                 
-                paymentService.handleSuccessfulPayment(session.getId());
+                paymentService.handleSuccessfulPayment(session);
             }
             
             return ResponseEntity.ok("Success");
